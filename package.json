@@ -1,0 +1,43 @@
+{
+  "name": "crypto-lab",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild --bundle --minify --charset=utf8 --platform=node --format=esm --packages=external --outfile=dist/index.js src/index.ts",
+    "serve": "node --run build && node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "archive": "rm -f crypto-lab.7z && 7z a -mx9 crypto-lab.7z . -xr!database/database.db -xr!database/database.db-shm -xr!database/database.db-wal -xr!dist -xr!drizzle -xr!frontend -xr!node_modules -xr!storage -xr!config.yaml -xr!deploy.cmd -xr!pnpm-lock.yaml",
+    "unarchive": "rm -rf public && 7z x -y crypto-lab.7z"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.2",
+    "@hono/zod-validator": "^0.4.1",
+    "@napi-rs/blake-hash": "^1.3.4",
+    "@node-rs/argon2": "^2.0.0",
+    "adm-zip": "^0.5.16",
+    "better-sqlite3": "^11.4.0",
+    "csv-stringify": "^6.5.1",
+    "drizzle-orm": "^0.35.2",
+    "exit-hook": "^4.0.0",
+    "hono": "^4.6.5",
+    "hono-rate-limiter": "^0.4.0",
+    "js-yaml": "^4.1.0",
+    "node-stream-zip": "^1.15.0",
+    "string-argv": "^0.3.2",
+    "wretch": "^2.10.0",
+    "zod": "^3.23.8",
+    "zod-validation-error": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.7.7",
+    "drizzle-kit": "^0.26.2",
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.1"
+  }
+}

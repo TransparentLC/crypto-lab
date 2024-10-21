@@ -1,0 +1,55 @@
+server:
+  host: localhost
+  port: 4000
+  # 也可以使用Unix Socket
+  # port: /var/run/crypto-lab.sock
+auth:
+  # Cloudflare Turnstile用Sitekey和Secret key
+  # https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+  captcha:
+    site: 1x00000000000000000000AA
+    secret: 1x0000000000000000000000000000000AA
+  # https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#peppering
+  # https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#argon2id
+  argon2:
+    pepper: xxxxxxxx
+    memoryCost: 16384
+    timeCost: 4
+    parallelism: 1
+  jwt:
+    secret: xxxxxxxx
+    expire: 14400
+    # 请求API时如果JWT有效期小于此值则发送新的JWT
+    refresh: 7200
+  # 加密重置密码相关
+  # 重置token包含用户信息、有效期和已有的密码hash（保证一个token只能重置一次）
+  # 用AES-128 CTR加密
+  passwordReset:
+    # crypto.getRandomValues(Buffer.allocUnsafe(16)).toString('base64url')
+    secret: xxxxxxxxxxxxxxxxxxxxxx
+    expire: 14400
+  # 管理员密码，用户名固定为admin
+  # pnpm exec tsx scripts/admin-password.ts password
+  # Password for "admin"
+  admin: $argon2id$xxxxxxxx
+# 输出和提交上限
+sizeLimit:
+  compileOutput: 16384
+  runOutput: 134217728
+  code: 1048576
+  report: 5242880
+# 提交频率限制
+rateLimit:
+  code:
+    window: 10800
+    limit: 20
+  report:
+    window: 3600
+    limit: 5
+# 沙盒的API地址和token
+# https://github.com/criyle/go-judge
+sandbox:
+  endpoint: http://example.com:5050
+  token: xxxxxxxx
+  # 每隔一段时间检查是否有未评测的提交
+  checkInterval: 30
