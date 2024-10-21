@@ -1,0 +1,118 @@
+\documentclass[fontsize=10.5pt]{ctexart}
+
+\special{dvipdfmx:config z 9}
+
+\usepackage{array}
+\usepackage[a4paper, left=3.18cm, right=3.18cm, top=2.54cm, bottom=2.54cm]{geometry}
+\usepackage{minted}
+\usepackage{tabularx}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{zhnumber}
+
+\pagestyle{empty}
+\renewcommand\arraystretch{1.5}
+\titleformat{\section}{\fontsize{10.5}{10.5}\raggedright\bfseries}{\thesection、}{0em}{}
+\titleformat{\subsection}{\fontsize{10.5}{10.5}\raggedright\bfseries}{（\thesubsection）}{0em}{}
+\renewcommand\thesection{\zhnum{section}}
+\renewcommand\thesubsection{\zhnum{subsection}}
+
+\newtcolorbox{formal}[2][]{
+    grow to right by=-5mm,
+    grow to left by=-5mm,
+    boxrule=0pt,
+    boxsep=0pt,
+    enhanced jigsaw,
+    breakable,
+    borderline west={3pt}{0pt}{gray}
+}
+
+\begin{document}
+
+\begin{center}
+    \textbf{\fontsize{14}{14}《现代密码学》实验报告}
+\end{center}
+
+\noindent
+\begin{tabularx}{\textwidth}{|X|X|}
+    \hline
+    \textbf{实验名称：}（请自行修改）
+    &
+    \textbf{实验时间：}\today
+    \\ \hline
+    \textbf{学生姓名：}张三
+    &
+    \textbf{学号：}12345678
+    \\ \hline
+    \textbf{学生班级：}20网安/20保密管理
+    &
+    \textbf{成绩评定：}
+    \\ \hline
+\end{tabularx}
+
+\section{实验目的}
+
+通过实现……，理解……，提高……
+
+\section{实验内容}
+
+用 C/C++ 实现某个密码方案...
+
+参数要求：...
+
+\section{实验原理}
+
+……
+
+\section{实验步骤（源代码）}
+
+规范的编程语言代码。
+
+{
+\linespread{1}
+\renewcommand{\theFancyVerbLine}{\textcolor[HTML]{888888}{\arabic{FancyVerbLine}}}
+
+\begin{minted}[
+    style=colorful,
+    xleftmargin=\parindent,
+    fontsize=\small,
+    linenos,
+    breaklines,
+    breaksymbol=\ensuremath{\textcolor[HTML]{888888}{\hookrightarrow}}
+]{C}
+#include <stdio.h>
+
+// Code example
+
+int main(int argc, char const *argv[]) {
+    return 0;
+}
+\end{minted}
+}
+
+如果代码太长，可以分段展示重要部分。
+
+\section{实验结果}
+
+运行截图和最终结果。
+
+\section{思考题}
+
+\begin{formal}{}
+    还有什么实现……的方法？
+\end{formal}
+
+……
+
+\begin{formal}{}
+    其他的问题？
+\end{formal}
+
+……
+
+\section{实验总结}
+
+……
+
+\end{document}
