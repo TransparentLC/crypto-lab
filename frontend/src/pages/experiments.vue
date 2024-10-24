@@ -217,11 +217,45 @@
                                         <n-tag
                                             v-else
                                             @click="showSubmissionResult(e)"
+                                            :style="{
+                                                cursor: 'pointer',
+                                                background: (
+                                                    e.subid === submissionDataSpecial.gold?.subid
+                                                    ? 'linear-gradient(135deg,rgba(211,175,87,.25) 40%,rgba(211,175,87,.05) 50%,rgba(211,175,87,.25) 60%)'
+                                                    : e.subid === submissionDataSpecial.silver?.subid
+                                                        ? 'linear-gradient(135deg,rgba(160,160,160,.25) 40%,rgba(160,160,160,.05) 50%,rgba(160,160,160,.25) 60%)'
+                                                        : e.subid === submissionDataSpecial.bronze?.subid
+                                                            ? 'linear-gradient(135deg,rgba(205,127,50,.25) 40%,rgba(205,127,50,.05) 50%,rgba(205,127,50,.25) 60%)'
+                                                            : undefined
+                                                ),
+                                                backgroundSize: '300%',
+                                                animation: '2s infinite tag-highlight',
+                                            }"
                                             :bordered="false"
-                                            style="cursor:pointer"
+                                            :color="(
+                                                e.subid === submissionDataSpecial.gold?.subid
+                                                ? { textColor: 'rgb(211,175,87)' }
+                                                : e.subid === submissionDataSpecial.silver?.subid
+                                                    ? { textColor: 'rgb(160,160,160)' }
+                                                    : e.subid === submissionDataSpecial.bronze?.subid
+                                                        ? { textColor: 'rgb(205,127,50)' }
+                                                        : undefined
+                                            )"
                                             :type="e.accepted! ? 'success' : 'warning'"
                                         >
-                                            <template #icon><n-mdi :icon="e.accepted! ? mdiCheckCircle : mdiBug"></n-mdi></template>
+                                            <template #icon><n-mdi
+                                                :icon="(
+                                                    e.accepted!
+                                                        ? (
+                                                            e.subid === submissionDataSpecial.gold?.subid ||
+                                                            e.subid === submissionDataSpecial.silver?.subid ||
+                                                            e.subid === submissionDataSpecial.bronze?.subid
+                                                        )
+                                                            ? mdiMedal
+                                                            : mdiCheckCircle
+                                                        : mdiBug
+                                                    )"
+                                            ></n-mdi></template>
                                             {{ e.time }} ms / {{ formatSize(e.memory!) }} / Accept {{ e.acceptedCount }}/{{ e.result!.length }}
                                         </n-tag>
                                     </n-td>
@@ -252,7 +286,7 @@
                                 <template #unchecked>查看所有人的提交</template>
                             </n-switch>
                         </n-el>
-                        <n-el v-if="store.token">
+                        <n-el>
                             <n-switch
                                 v-model:value="submissionDataAccepted"
                                 @update:value="updateSubmissionData(route.params.expid, (submissionPage = 1), submissionDataSelf, submissionDataAccepted)"
@@ -353,11 +387,22 @@
     </n-page-header>
 </template>
 
+<style>
+@keyframes tag-highlight {
+    from {
+        background-position: 0% 50%;
+    }
+    to {
+        background-position: 100% 50%;
+    }
+}
+</style>
+
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, h } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { type UploadFileInfo, type UploadCustomRequestOptions, NSpace, NText, NLog, NH3, NTable, NThead, NTbody, NTr, NTd, NTh, NA, NCode } from 'naive-ui';
-import { mdiTimerOutline, mdiFileDocumentOutline, mdiCodeBlockBraces, mdiUploadBoxOutline, mdiCheckCircle, mdiCloseCircle, mdiBug, mdiCogs, mdiRefresh } from '@mdi/js';
+import { mdiTimerOutline, mdiFileDocumentOutline, mdiCodeBlockBraces, mdiUploadBoxOutline, mdiCheckCircle, mdiCloseCircle, mdiBug, mdiCogs, mdiRefresh, mdiMedal } from '@mdi/js';
 import hljs from 'highlight.js/lib/core';
 import NMarked from '../components/marked.js';
 import NMdi from '../components/mdi.vue';
@@ -445,6 +490,7 @@ const submitCode = async (options: UploadCustomRequestOptions) => {
 const submissionPage = ref(1);
 const submissionPageCount = ref(0);
 const submissionData = reactive<(Omit<ApiExperimentSubmissions['rows'][number], 'submitTime'> & { submitTime: Date })[]>([]);
+const submissionDataSpecial = reactive<ApiExperimentSubmissions['special']>({});
 const submissionDataSelf = ref(false);
 const submissionDataAccepted = ref(false);
 const updateSubmissionDataLoading = ref(false);
@@ -456,6 +502,7 @@ const updateSubmissionData = (expid: any, page: number, self: boolean, accepted:
         submissionData.length = 0;
         submissionData.push(...r.rows.map(e => Object.assign(e, { submitTime: new Date(e.submitTime) })));
         submissionPageCount.value = r.pages;
+        Object.assign(submissionDataSpecial, r.special);
     })
     .finally(() => updateSubmissionDataLoading.value = false);
 

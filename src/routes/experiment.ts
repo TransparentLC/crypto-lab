@@ -2,7 +2,7 @@ import path from 'node:path';
 import AdmZip from 'adm-zip';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, gte, lte, or, and, not, desc, count, sql } from 'drizzle-orm';
+import { eq, gte, lte, or, and, not, desc, count, sql, min, asc } from 'drizzle-orm';
 import yaml from 'js-yaml';
 import { Blake3Hasher } from '@napi-rs/blake-hash';
 
@@ -212,18 +212,18 @@ app.get(
             ))
             .get()!
             .count;
-        const subquery = db
+        const subqueryUsername = db
             .select({
                 uid: users.uid,
                 username: users.username,
             })
             .from(users)
-            .as('subquery');
+            .as('subqueryUsername');
         const rows = db
             .select({
                 subid: submissions.subid,
                 uid: submissions.uid,
-                username: subquery.username,
+                username: subqueryUsername.username,
                 submitTime: submissions.submitTime,
                 pending: submissions.pending,
                 code: submissions.code,
@@ -248,7 +248,7 @@ app.get(
                 ),
                 ...(query.accepted ? [submissions.accepted] : []),
             ))
-            .innerJoin(subquery, eq(submissions.uid, subquery.uid))
+            .innerJoin(subqueryUsername, eq(submissions.uid, subqueryUsername.uid))
             .orderBy(desc(submissions.submitTime))
             .limit(20)
             .offset((query.page - 1) * 20)
@@ -259,10 +259,65 @@ app.get(
                 if (row.uid !== ctx.get('jwtPayload')?.uid) row.code = row.compileOutput = null;
             });
         }
+
+        const special: {
+            gold?: typeof rows[number],
+            silver?: typeof rows[number],
+            bronze?: typeof rows[number],
+        } = {};
+
+        const subqueryBestAccepted = db
+            .select({
+                subid: submissions.subid,
+                time: min(submissions.time),
+            })
+            .from(submissions)
+            .where(and(
+                not(submissions.obsolete),
+                eq(submissions.expid, Number(ctx.req.param('expid'))),
+                submissions.accepted,
+            ))
+            .groupBy(submissions.uid)
+            .as('subqueryBestAccepted');
+        const rowsBestAccepted = db
+            .select({
+                subid: submissions.subid,
+                uid: submissions.uid,
+                username: subqueryUsername.username,
+                submitTime: submissions.submitTime,
+                pending: submissions.pending,
+                code: submissions.code,
+                language: submissions.language,
+                length: sql`length(${submissions.code})`,
+                compileSuccess: submissions.compileSuccess,
+                compileOutput: submissions.compileOutput,
+                time: submissions.time,
+                memory: submissions.memory,
+                accepted: submissions.accepted,
+                acceptedCount: submissions.acceptedCount,
+                result: submissions.result,
+            })
+            .from(submissions)
+            .innerJoin(subqueryBestAccepted, eq(submissions.subid, subqueryBestAccepted.subid))
+            .innerJoin(subqueryUsername, eq(submissions.uid, subqueryUsername.uid))
+            .orderBy(asc(submissions.time))
+            .limit(3)
+            .all();
+        if (!ctx.get('jwtPayload') || ctx.get('jwtPayload').role !== 'admin') {
+            rowsBestAccepted.forEach(row => {
+                // @ts-expect-error
+                if (row.uid !== ctx.get('jwtPayload')?.uid) row.code = row.compileOutput = null;
+            });
+        }
+        special.gold = rowsBestAccepted[0];
+        special.silver = rowsBestAccepted[1];
+        special.bronze = rowsBestAccepted[2];
+
         return ctx.json({
             count: rowCount,
             pages: Math.ceil(rowCount / 20),
             rows,
+            special,
         });
     },
 );

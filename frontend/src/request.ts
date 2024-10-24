@@ -131,30 +131,37 @@ export type ApiAdminExperiment = {
     checkpointPath: string,
 };
 
+type ApiExperimentSubmissionsRow = {
+    subid: number,
+    uid: number,
+    username: string,
+    submitTime: string,
+    pending: boolean,
+    language: string,
+    code: string | null,
+    length: number,
+    compileSuccess: boolean | null,
+    compileOutput: string | null,
+    time: number | null,
+    memory: number | null,
+    accepted: boolean | null,
+    acceptedCount: number | null,
+    result: {
+        time: number,
+        memory: number,
+        status: 'Accepted' | 'Wrong Answer' | 'Memory Limit Exceeded' | 'Time Limit Exceeded' | 'Output Limit Exceeded' | 'File Error' | 'Nonzero Exit Status' | 'Signalled' | 'Internal Error',
+    }[] | null,
+};
+
 export type ApiExperimentSubmissions = {
     count: number,
     pages: number,
-    rows: {
-        subid: number,
-        uid: number,
-        username: string,
-        submitTime: string,
-        pending: boolean,
-        language: string,
-        code: string | null,
-        length: number,
-        compileSuccess: boolean | null,
-        compileOutput: string | null,
-        time: number | null,
-        memory: number | null,
-        accepted: boolean | null,
-        acceptedCount: number | null,
-        result: {
-            time: number,
-            memory: number,
-            status: 'Accepted' | 'Wrong Answer' | 'Memory Limit Exceeded' | 'Time Limit Exceeded' | 'Output Limit Exceeded' | 'File Error' | 'Nonzero Exit Status' | 'Signalled' | 'Internal Error',
-        }[] | null,
-    }[],
+    rows: ApiExperimentSubmissionsRow[],
+    special: {
+        gold?: ApiExperimentSubmissionsRow,
+        silver?: ApiExperimentSubmissionsRow,
+        bronze?: ApiExperimentSubmissionsRow,
+    },
 };
 
 export type ApiStatistics = {
