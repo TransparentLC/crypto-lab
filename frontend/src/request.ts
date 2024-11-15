@@ -150,6 +150,7 @@ type ApiExperimentSubmissionsRow = {
         time: number,
         memory: number,
         status: 'Accepted' | 'Wrong Answer' | 'Memory Limit Exceeded' | 'Time Limit Exceeded' | 'Output Limit Exceeded' | 'File Error' | 'Nonzero Exit Status' | 'Signalled' | 'Internal Error',
+        stderr: string,
     }[] | null,
 };
 

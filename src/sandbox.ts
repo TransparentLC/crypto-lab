@@ -15,6 +15,7 @@ import { formdataFromRecord, blobFromReadableStream } from './util.js';
 import { experiments, submissions, users } from './schema.js';
 
 const procLimit = 16;
+const stderrLimit = 4096;
 const clockLimitFactor = 1.145141919810;
 
 const sandboxClient = wretch(config.sandbox.endpoint)
@@ -123,7 +124,7 @@ export const judge = async (submission: InferSelectModel<typeof submissions>): P
                             files: [
                                 { fileId: checkpointInputFileId },
                                 { name: 'stdout', max: config.sizeLimit.runOutput },
-                                { name: 'stderr', max: config.sizeLimit.runOutput },
+                                { name: 'stderr', max: stderrLimit },
                             ],
                             procLimit,
                             cpuRateLimit: experiment.cpuLimit,
@@ -134,13 +135,16 @@ export const judge = async (submission: InferSelectModel<typeof submissions>): P
                             copyIn: {
                                 [execFile]: { fileId: execFileId },
                             },
-                            copyOutCached: ['stdout'],
+                            copyOutCached: ['stdout', 'stderr'],
                         },
                     ],
                 } as GoJudge.Request, '/run')
                 .json<GoJudge.Result[]>())[0];
             // dir(runResponse, { depth: null });
             const checkpointOutputFileId = runResponse.fileIds!.stdout;
+            const checkpointStderrFileId = runResponse.fileIds!.stderr;
+            const checkpointStderr = await sandboxClient.get(`/file/${runResponse.fileIds!.stderr}`).res(r => r.text());
+            log('stderr', checkpointStderr);
             if (runResponse.status === 'Accepted') {
                 // @ts-expect-error
                 const checkpointOutput = await sandboxClient.get(`/file/${checkpointOutputFileId}`).res(r => stream.Readable.fromWeb(r.body!));
@@ -250,11 +254,12 @@ export const judge = async (submission: InferSelectModel<typeof submissions>): P
                 // 减去stdout的部分
                 runResponse.memory -= checkpointOutputLength;
             }
-            await Promise.all([checkpointInputFileId, checkpointOutputFileId].map(e => sandboxClient.delete(`/file/${e}`).res()));
+            await Promise.all([checkpointInputFileId, checkpointOutputFileId, checkpointStderrFileId].map(e => sandboxClient.delete(`/file/${e}`).res()));
             result.result.push({
                 time: runResponse.time / 1e6,
                 memory: runResponse.memory,
                 status: runResponse.status,
+                stderr: checkpointStderr,
             });
         }
         await sandboxClient.delete(`/file/${execFileId}`).res();

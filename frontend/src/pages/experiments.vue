@@ -557,7 +557,19 @@ const showSubmissionResult = (submission: Omit<ApiExperimentSubmissions['rows'][
                             h(NTd, () => `#${i + 1}`),
                             h(NTd, () => `${e.time} ms`),
                             h(NTd, () => formatSize(e.memory)),
-                            h(NTd, () => h(NText, { type: e.status === 'Accepted' ? 'success' : 'error' }, e.status)),
+                            h(NTd, () => h(
+                                NText,
+                                {
+                                    type: e.status === 'Accepted' ? 'success' : 'error',
+                                    underline: !!e.stderr,
+                                    title: e.stderr,
+                                    style: e.stderr ? {
+                                        textDecorationStyle: 'dashed',
+                                        cursor: 'help',
+                                    } : null,
+                                },
+                                e.status,
+                            )),
                             h(NTd, () => experiment.checkpointNotes[i] || ''),
                         ]),
                     ])),
