@@ -255,8 +255,11 @@ app.get(
             .all();
         if (!ctx.get('jwtPayload') || ctx.get('jwtPayload').role !== 'admin') {
             rows.forEach(row => {
-                // @ts-expect-error
-                if (row.uid !== ctx.get('jwtPayload')?.uid) row.code = row.compileOutput = null;
+                if (row.uid !== ctx.get('jwtPayload')?.uid) {
+                    // @ts-expect-error
+                    row.code = row.compileOutput = null;
+                    row.result?.forEach(e => e.stderr = '');
+                }
             });
         }
 
