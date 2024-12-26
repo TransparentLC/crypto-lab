@@ -33,7 +33,9 @@ window.chiya = {
             placement: 'bottom-right',
         },
     }),
+    // src/app.vue
     route: () => {},
+    getCurrentRoute: () => {},
 };
 
 createApp(app)

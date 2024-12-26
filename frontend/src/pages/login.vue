@@ -151,7 +151,8 @@ const login = async () => {
             .json<ApiLogin>();
         localStorage.setItem('token', store.token = r.token);
         window.chiya.message.success('登录成功');
-        router.push('/');
+        const route = router.currentRoute.value;
+        router.push((Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect) || '/');
     } catch {} finally {
         loading.value = false;
         captchaLogin.value?.reset();

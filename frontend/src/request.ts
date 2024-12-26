@@ -28,7 +28,11 @@ export default wretch('api')
                     localStorage.removeItem('token');
                     store.token = '';
                     if (window.chiya) {
-                        window.chiya.route('/login');
+                        const route = window.chiya.getCurrentRoute();
+                        window.chiya.route({
+                            path: '/login',
+                            query: route ? { redirect: route.path } : undefined,
+                        });
                         window.chiya.message.warning('登录已过期');
                         throw new Error('登录已过期');
                     }
@@ -41,7 +45,11 @@ export default wretch('api')
         window.chiya.message.error('登录状态无效');
         localStorage.removeItem('token');
         store.token = '';
-        window.chiya.route('/login');
+        const route = window.chiya.getCurrentRoute();
+        window.chiya.route({
+            path: '/login',
+            query: route ? { redirect: route.path } : undefined,
+        });
         throw err;
     })
     .catcherFallback(err => {

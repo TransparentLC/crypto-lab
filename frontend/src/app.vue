@@ -1,7 +1,7 @@
 <template>
     <n-config-provider
         :hljs="hljs"
-        :katex="katex"
+        :katex="(katex as any)"
         :locale="zhCN"
         :date-locale="dateZhCN"
         :theme="theme"
@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h, onMounted } from 'vue';
-import { useRoute, useRouter, RouterLink } from 'vue-router';
+import { useRoute, useRouter, RouterLink, type RouteLocationRaw } from 'vue-router';
 import { zhCN, dateZhCN, lightTheme, darkTheme, useOsTheme, GlobalThemeOverrides, type MenuOption } from 'naive-ui';
 import hljs from 'highlight.js/lib/core';
 import katex from 'katex';
@@ -117,7 +117,8 @@ const themeOverrides: GlobalThemeOverrides = {
     },
 };
 
-window.chiya.route = (e: string) => router.push(e);
+window.chiya.route = (e: RouteLocationRaw) => router.push(e);
+window.chiya.getCurrentRoute = () => router.currentRoute.value;
 
 const menuCollapsed = ref(false);
 const menuDrawer = ref(false);
