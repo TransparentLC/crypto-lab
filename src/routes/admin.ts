@@ -282,8 +282,10 @@ app.get(
             accepted: submissions.accepted,
             acceptedCount: submissions.acceptedCount,
             acceptedPercentage: sql`${submissions.acceptedCount} / ${checkpointMetadata.length}`,
+            code: submissions.code,
         };
-        const rows: any[][] = [Object.keys(selects)];
+        const zip = new AdmZip;
+        const rows: any[][] = [Object.keys(selects).filter(e => e !== 'code')];
         db
             .selectDistinct({ uid: submissions.uid })
             .from(submissions)
@@ -294,7 +296,7 @@ app.get(
             )
             .all()
             .forEach(({ uid }) => {
-                const row = db
+                let row = db
                     .select(selects)
                     .from(submissions)
                     .where(and(
@@ -311,10 +313,17 @@ app.get(
                     )
                     .limit(1)
                     .get()!;
+                zip.addFile(
+                    path.join('code', `submission${row.subid}-exp${ctx.req.param('expid')}-uid${row.uid}.${row.language}`),
+                    Buffer.from(row.code),
+                );
+                // @ts-expect-error
+                delete row.code;
                 rows.push(Object.values(row));
             });
-        ctx.header('Content-Type', 'text/csv');
-        return ctx.body(csvStringify(rows));
+        zip.addFile('result.csv', Buffer.from(csvStringify(rows)));
+        ctx.header('Content-Type', 'application/zip');
+        return ctx.body(stream.Readable.toWeb(stream.Readable.from(await zip.toBufferPromise())) as ReadableStream);
     },
 );
 

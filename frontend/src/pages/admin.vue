@@ -254,7 +254,7 @@
                     download
                 >
                     <template #icon><n-mdi :icon="mdiDownload"></n-mdi></template>
-                    评测结果
+                    代码和评测结果
                 </n-button>
                 <n-button
                     secondary
