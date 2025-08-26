@@ -34,6 +34,7 @@ pnpm-lock.yaml
 database
 dist
 drizzle
+manual-judge
 public
 !frontend/public
 storage
