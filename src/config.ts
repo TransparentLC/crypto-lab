@@ -49,6 +49,15 @@ type Config = {
         token: string;
         checkInterval: number;
     };
+    theme: {
+        color: {
+            primary: string;
+            hover: string;
+            pressed: string;
+            suppl: string;
+        };
+        logo: string;
+    };
 };
 
 const deepFreeze = <T extends object>(obj: T) => {

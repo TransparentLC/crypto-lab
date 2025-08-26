@@ -53,3 +53,12 @@ sandbox:
   token: xxxxxxxx
   # 每隔一段时间检查是否有未评测的提交
   checkInterval: 30
+theme:
+  # Naive UI的主题色
+  color:
+    primary: '#f69'
+    hover: '#f8a'
+    pressed: '#f37'
+    suppl: '#f8a'
+  # 左上角的LOGO
+  logo: logo/origin.svg

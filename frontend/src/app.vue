@@ -19,10 +19,7 @@
                     >
                         <n-mdi :icon="mdiMenu"></n-mdi>
                     </n-button>
-                    <img v-if="1" src="/crypto-lab-logo.svg" height="36" style="transform:scale(1.2);transform-origin:left">
-                    <n-gradient-text v-else :size="24" type="success">
-                        <strong>Crypto lab</strong>
-                    </n-gradient-text>
+                    <img :src="store.siteConfig.theme.logo" height="36" style="transform:scale(1.2);transform-origin:left">
                     <div style="flex-grow:1"></div>
                     <router-link v-if="tokenPayload" to="/account" v-slot="{ navigate }">
                         <n-button quaternary @click="navigate">
@@ -90,6 +87,8 @@
 import hljs from 'highlight.js/lib/core';
 import katex from 'katex';
 import {
+    type ConfigProviderProps,
+    createDiscreteApi,
     darkTheme,
     dateZhCN,
     GlobalThemeOverrides,
@@ -129,11 +128,29 @@ const themeOverrides: GlobalThemeOverrides = {
         fontFamilyMono:
             'v-mono, SFMono-Regular, Menlo, "Cascadia Code", Consolas, Courier, monospace',
         fontWeightStrong: 'bold',
+        primaryColor: store.siteConfig.theme.color.primary,
+        primaryColorHover: store.siteConfig.theme.color.hover,
+        primaryColorPressed: store.siteConfig.theme.color.pressed,
+        primaryColorSuppl: store.siteConfig.theme.color.suppl,
     },
 };
+const configProviderPropsRef = computed<ConfigProviderProps>(() => ({
+    theme: theme.value,
+    themeOverrides,
+    locale: zhCN,
+    dateLocale: dateZhCN,
+}));
 
-window.chiya.route = (e: RouteLocationRaw) => router.push(e);
-window.chiya.getCurrentRoute = () => router.currentRoute.value;
+window.chiya = {
+    ...createDiscreteApi(['message', 'dialog', 'notification'], {
+        configProviderProps: configProviderPropsRef,
+        notificationProviderProps: {
+            placement: 'bottom-right',
+        },
+    }),
+    route: (e: RouteLocationRaw) => router.push(e),
+    getCurrentRoute: () => router.currentRoute.value,
+};
 
 const menuCollapsed = ref(false);
 const menuDrawer = ref(false);

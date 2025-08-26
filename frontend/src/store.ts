@@ -17,6 +17,15 @@ const store = reactive({
             code: 0,
             report: 0,
         },
+        theme: {
+            color: {
+                primary: '',
+                hover: '',
+                pressed: '',
+                suppl: '',
+            },
+            logo: '',
+        },
     },
 });
 

@@ -87,6 +87,15 @@ export type ApiSiteConfig = {
         code: number;
         report: number;
     };
+    theme: {
+        color: {
+            primary: string;
+            hover: string;
+            pressed: string;
+            suppl: string;
+        };
+        logo: string;
+    };
 };
 
 export type ApiAdminUsers = {

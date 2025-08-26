@@ -6,7 +6,6 @@ import hljsMarkdown from 'highlight.js/lib/languages/markdown';
 import hljsPlaintext from 'highlight.js/lib/languages/plaintext';
 import hljsPython from 'highlight.js/lib/languages/python';
 import hljsRust from 'highlight.js/lib/languages/rust';
-import { createDiscreteApi } from 'naive-ui';
 import { createApp } from 'vue';
 
 import app from './app.vue';
@@ -25,17 +24,6 @@ hljs.registerLanguage('rust', hljsRust);
 hljs.registerLanguage('plain', hljsPlaintext);
 hljs.registerLanguage('text', hljsPlaintext);
 hljs.registerLanguage('plaintext', hljsPlaintext);
-
-window.chiya = {
-    ...createDiscreteApi(['message', 'dialog', 'notification'], {
-        notificationProviderProps: {
-            placement: 'bottom-right',
-        },
-    }),
-    // src/app.vue
-    route: () => {},
-    getCurrentRoute: () => {},
-};
 
 createApp(app).use(router).mount('#app');
 

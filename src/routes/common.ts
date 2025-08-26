@@ -36,6 +36,7 @@ app.get('/site-config', async ctx =>
         captchaSiteKey: config.auth.captcha.site,
         tokenRefresh: config.auth.jwt.refresh,
         sizeLimit: config.sizeLimit,
+        theme: config.theme,
     }),
 );
 
