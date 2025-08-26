@@ -12,9 +12,6 @@ export const passwordGenerate = (length: number) => Array(length)
 
 export const formdataFromRecord = (e: Record<string, string | Blob>) => Object.entries(e).reduce((f, [k, v]) => { f.set(k, v); return f; }, new FormData);
 
-// https://stackoverflow.com/questions/75793118/streaming-multipart-form-data-request-with-native-fetch-in-node-js
-export const blobFromReadableStream = (s: NodeJS.ReadableStream) => ({
-    [Symbol.toStringTag]: 'File',
-    name: 'file',
-    stream: () => s,
-} as unknown as Blob);
+// https://bun.com/guides/streams/node-readable-to-blob
+// @ts-ignore
+export const blobFromReadableStream = async (s: NodeJS.ReadableStream) => await new Response(s).blob();

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { Hono } from 'hono';
 import { type HTTPResponseError } from 'hono/types';
-import { type StatusCode } from 'hono/utils/http-status';
+import { type ContentfulStatusCode } from 'hono/utils/http-status';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 
@@ -21,7 +21,7 @@ const app = new Hono<HonoSchema>;
 app
     .use(logger)
     .onError((err, ctx) => {
-        let statusCode: StatusCode = (err as HTTPResponseError).getResponse?.().status as StatusCode;
+        let statusCode = (err as HTTPResponseError).getResponse?.().status as ContentfulStatusCode;
         if (!statusCode) {
             statusCode = 500;
             console.error(err);

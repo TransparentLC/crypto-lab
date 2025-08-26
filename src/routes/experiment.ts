@@ -191,9 +191,9 @@ app.get(
     '/experiments/:expid{\\d+}/submissions',
     jwtOptional,
     validator('query', z.object({
-        page: z.number({ coerce: true }).int().min(1).optional().default(1),
-        self: z.enum(['1', 'true', 'on', '0', 'false', 'off']).transform(e => ['1', 'true', 'on'].includes(e)).optional().default('0'),
-        accepted: z.enum(['1', 'true', 'on', '0', 'false', 'off']).transform(e => ['1', 'true', 'on'].includes(e)).optional().default('0'),
+        page: z.coerce.number().int().min(1).optional().default(1),
+        self: z.stringbool().optional().default(false),
+        accepted: z.stringbool().optional().default(false),
     })),
     async ctx => {
         const query = ctx.req.valid('query');

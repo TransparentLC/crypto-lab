@@ -24,7 +24,7 @@ app.get(
     jwt,
     ensureAdmin,
     validator('query', z.object({
-        page: z.number({ coerce: true }).int().min(1).optional().default(1),
+        page: z.coerce.number().int().min(1).optional().default(1),
     })),
     async ctx => {
         const query = ctx.req.valid('query');

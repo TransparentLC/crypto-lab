@@ -110,7 +110,7 @@ export const judge = async (submission: InferSelectModel<typeof submissions>): P
             const checkpointInput = await checkpointZip.stream(checkpoint.input);
             const checkpointOutputExpected = await checkpointZip.stream(checkpoint.output);
             const checkpointInputFileId = await sandboxClient
-                .post(formdataFromRecord({ file: blobFromReadableStream(checkpointInput) }), '/file')
+                .post(formdataFromRecord({ file: await blobFromReadableStream(checkpointInput) }), '/file')
                 .json<string>();
             const runResponse = (await sandboxClient
                 .post({
@@ -207,7 +207,7 @@ export const judge = async (submission: InferSelectModel<typeof submissions>): P
                         const checkpointInputFile = `input-${crypto.randomUUID()}`;
                         const checkpointOutputFile = `output-${crypto.randomUUID()}`;
                         const specialJudgeFileId = await sandboxClient
-                            .post(formdataFromRecord({ file: blobFromReadableStream(checkpointOutputExpected) }), '/file')
+                            .post(formdataFromRecord({ file: await blobFromReadableStream(checkpointOutputExpected) }), '/file')
                             .json<string>();
                         const specialJudgeResponse = (await sandboxClient
                             .post({
