@@ -4,6 +4,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import type { HTTPResponseError } from 'hono/types';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { mimes } from 'hono/utils/mime';
 
 import config from './config';
 import { logger } from './middlewares';
@@ -11,6 +12,11 @@ import apiRoutes from './routes';
 import { judgeLoop } from './sandbox';
 
 if (!fs.existsSync('storage')) fs.mkdirSync('storage');
+
+// 添加 Markdown 的 MIME 类型
+// https://github.com/honojs/hono/blob/main/src/utils/mime.ts
+// @ts-expect-error
+mimes.md = 'text/markdown';
 
 const app = new Hono<HonoSchema>();
 
