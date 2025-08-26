@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import http from '../request.js';
@@ -95,26 +95,36 @@ const formChangePasswordValue = reactive({
 const changePassword = async () => {
     try {
         changePasswordLoading.value = true;
-        await http.post({
-            oldPassword: formChangePasswordValue.oldPassword,
-            newPassword: formChangePasswordValue.newPassword,
-        }, '/change-password').res();
+        await http
+            .post(
+                {
+                    oldPassword: formChangePasswordValue.oldPassword,
+                    newPassword: formChangePasswordValue.newPassword,
+                },
+                '/change-password',
+            )
+            .res();
         window.chiya.message.success('修改成功');
-        formChangePasswordValue.oldPassword = formChangePasswordValue.newPassword = formChangePasswordValue.newPasswordRepeat = '';
-    } catch {} finally {
+        formChangePasswordValue.oldPassword =
+            formChangePasswordValue.newPassword =
+            formChangePasswordValue.newPasswordRepeat =
+                '';
+    } catch {
+    } finally {
         changePasswordLoading.value = false;
     }
 };
 
-const logout = () => window.chiya.dialog.create({
-    title: '退出登录',
-    content: '是否确定要退出登录？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () => {
-        localStorage.removeItem('token');
-        store.token = '';
-        router.push('/');
-    }
-});
+const logout = () =>
+    window.chiya.dialog.create({
+        title: '退出登录',
+        content: '是否确定要退出登录？',
+        positiveText: '确定',
+        negativeText: '取消',
+        onPositiveClick: () => {
+            localStorage.removeItem('token');
+            store.token = '';
+            router.push('/');
+        },
+    });
 </script>

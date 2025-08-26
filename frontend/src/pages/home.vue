@@ -18,13 +18,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import NMarked from '../components/marked.js';
 import http from '../request.js';
 
 const homepage = ref('');
 const loading = ref(true);
 
-onMounted(() => http.url('resources/homepage.md', true).get().text(r => homepage.value = r).finally(() => loading.value = false));
-
+onMounted(async () => {
+    try {
+        homepage.value = await http
+            .url('resources/homepage.md', true)
+            .get()
+            .text();
+    } catch {
+    } finally {
+        loading.value = false;
+    }
+});
 </script>

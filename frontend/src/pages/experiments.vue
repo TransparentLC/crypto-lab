@@ -276,7 +276,7 @@
                         <n-el v-if="store.token">
                             <n-switch
                                 v-model:value="submissionDataSelf"
-                                @update:value="updateSubmissionData(route.params.expid, (submissionPage = 1), submissionDataSelf, submissionDataAccepted)"
+                                @update:value="updateSubmissionData(parseInt(route.params.expid as string, 10), (submissionPage = 1), submissionDataSelf, submissionDataAccepted)"
                                 :rail-style="({ checked, focused }) => ({
                                     background: checked ? 'var(--info-color)' : 'var(--primary-color)',
                                     boxShadow: focused ? `0 0 0 2px color-mix(in srgb, ${checked ? 'var(--info-color)' : 'var(--primary-color)'} 25%, transparent)` : undefined,
@@ -289,7 +289,7 @@
                         <n-el>
                             <n-switch
                                 v-model:value="submissionDataAccepted"
-                                @update:value="updateSubmissionData(route.params.expid, (submissionPage = 1), submissionDataSelf, submissionDataAccepted)"
+                                @update:value="updateSubmissionData(parseInt(route.params.expid as string, 10), (submissionPage = 1), submissionDataSelf, submissionDataAccepted)"
                                 :rail-style="({ checked, focused }) => ({
                                     background: checked ? 'var(--success-color)' : 'var(--info-color)',
                                     boxShadow: focused ? `0 0 0 2px color-mix(in srgb, ${checked ? 'var(--success-color)' : 'var(--info-color)'} 25%, transparent)` : undefined,
@@ -300,7 +300,7 @@
                             </n-switch>
                         </n-el>
                         <n-button
-                            @click="updateSubmissionData(route.params.expid, submissionPage, submissionDataSelf, submissionDataAccepted)"
+                            @click="updateSubmissionData(parseInt(route.params.expid as string, 10), submissionPage, submissionDataSelf, submissionDataAccepted)"
                             :loading="updateSubmissionDataLoading"
                         >
                             <template #icon><n-mdi :icon="mdiRefresh"></n-mdi></template>
@@ -310,7 +310,7 @@
                             v-model:page="submissionPage"
                             :page-count="submissionPageCount"
                             show-quick-jumper
-                            @update:page="(e: number) => updateSubmissionData(route.params.expid, e, submissionDataSelf, submissionDataAccepted)"
+                            @update:page="(e: number) => updateSubmissionData(parseInt(route.params.expid as string, 10), e, submissionDataSelf, submissionDataAccepted)"
                         ></n-pagination>
                     </n-space>
                 </n-space>
@@ -399,25 +399,56 @@
 </style>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, h } from 'vue';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { type UploadFileInfo, type UploadCustomRequestOptions, NSpace, NText, NLog, NH3, NTable, NThead, NTbody, NTr, NTd, NTh, NA, NCode } from 'naive-ui';
-import { mdiTimerOutline, mdiFileDocumentOutline, mdiCodeBlockBraces, mdiUploadBoxOutline, mdiCheckCircle, mdiCloseCircle, mdiBug, mdiCogs, mdiRefresh, mdiMedal } from '@mdi/js';
+import {
+    mdiBug,
+    mdiCheckCircle,
+    mdiCloseCircle,
+    mdiCodeBlockBraces,
+    mdiCogs,
+    mdiFileDocumentOutline,
+    mdiMedal,
+    mdiRefresh,
+    mdiTimerOutline,
+    mdiUploadBoxOutline,
+} from '@mdi/js';
 import hljs from 'highlight.js/lib/core';
+import {
+    NA,
+    NCode,
+    NH3,
+    NLog,
+    NSpace,
+    NTable,
+    NTbody,
+    NTd,
+    NText,
+    NTh,
+    NThead,
+    NTr,
+    type UploadCustomRequestOptions,
+    type UploadFileInfo,
+} from 'naive-ui';
+import { computed, h, onMounted, reactive, ref } from 'vue';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import NMarked from '../components/marked.js';
 import NMdi from '../components/mdi.vue';
-import http, { type ApiExperiment, type ApiExperimentSubmissions } from '../request.js';
-import store, { tokenPayload, isMobile, now } from '../store.js';
 import formatSize from '../format-size.js';
+import http, {
+    type ApiExperiment,
+    type ApiExperimentSubmissions,
+} from '../request.js';
+import store, { isMobile, now, tokenPayload } from '../store.js';
 
 const route = useRoute();
 
 const experimentLoading = ref(true);
 
-const experiment = reactive<Omit<ApiExperiment, 'startTime' | 'endTime'> & {
-    startTime: Date,
-    endTime: Date,
-}>({
+const experiment = reactive<
+    Omit<ApiExperiment, 'startTime' | 'endTime'> & {
+        startTime: Date;
+        endTime: Date;
+    }
+>({
     title: '',
     description: '',
     reportSubmission: false,
@@ -426,31 +457,38 @@ const experiment = reactive<Omit<ApiExperiment, 'startTime' | 'endTime'> & {
     compileMemoryLimit: 0,
     runTimeLimit: 0,
     runMemoryLimit: 0,
-    startTime: new Date,
-    endTime: new Date,
+    startTime: new Date(),
+    endTime: new Date(),
     compileCommands: {},
     checkpointNotes: [],
 });
 
-const loadExperiment = async (expid: any) => {
-    const t = setTimeout(() => experimentLoading.value = true, 200);
+const loadExperiment = async (expid: number) => {
+    const t = setTimeout(() => {
+        experimentLoading.value = true;
+    }, 200);
     try {
         await http
             .get(`/experiments/${expid}`)
             .json<ApiExperiment>()
-            .then(r => Object.assign(experiment, {
-                ...r,
-                startTime: new Date(r.startTime),
-                endTime: new Date(r.endTime),
-            }));
-    } catch {} finally {
+            .then(r =>
+                Object.assign(experiment, {
+                    ...r,
+                    startTime: new Date(r.startTime),
+                    endTime: new Date(r.endTime),
+                }),
+            );
+    } catch {
+    } finally {
         clearTimeout(t);
         experimentLoading.value = false;
     }
 };
 
-onMounted(() => loadExperiment(route.params.expid));
-onBeforeRouteUpdate(to => { loadExperiment(to.params.expid) });
+onMounted(() => loadExperiment(parseInt(route.params.expid as string, 10)));
+onBeforeRouteUpdate(to => {
+    loadExperiment(parseInt(to.params.expid as string, 10));
+});
 
 const submitCodeFileList = ref<UploadFileInfo[]>([]);
 const submitCode = async (options: UploadCustomRequestOptions) => {
@@ -458,27 +496,43 @@ const submitCode = async (options: UploadCustomRequestOptions) => {
     let ps = true;
     const pf = () => {
         // -(1.001^{-x})+1
-        options.onProgress({ percent: (-Math.pow(1.001, -(Date.now() - pt)) + 1) * 100 });
+        options.onProgress({
+            percent: (-(1.001 ** -(Date.now() - pt)) + 1) * 100,
+        });
         if (ps) requestAnimationFrame(pf);
     };
     requestAnimationFrame(pf);
     try {
+        // biome-ignore lint/style/noNonNullAssertion: file 必定存在
         const file = options.file.file!;
-        const code = await new Promise((resolve, reject) => {
-            const fr = new FileReader;
+        const code = (await new Promise((resolve, reject) => {
+            const fr = new FileReader();
             fr.onerror = reject;
             fr.onload = () => resolve(fr.result as string);
             fr.readAsText(file);
-        }) as string;
+        })) as string;
         await http
-            .post({
-                code,
-                language: file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name,
-            }, `/experiments/${route.params.expid}/submissions`)
-            .res()
+            .post(
+                {
+                    code,
+                    language:
+                        file.name.substring(
+                            file.name.lastIndexOf('.') + 1,
+                            file.name.length,
+                        ) || file.name,
+                },
+                `/experiments/${route.params.expid}/submissions`,
+            )
+            .res();
         window.chiya.message.success('已提交代码');
         options.onFinish();
-        updateSubmissionData(route.params.expid, (submissionPage.value = 1), submissionDataSelf.value, submissionDataAccepted.value);
+        submissionPage.value = 1;
+        updateSubmissionData(
+            parseInt(route.params.expid as string, 10),
+            submissionPage.value,
+            submissionDataSelf.value,
+            submissionDataAccepted.value,
+        );
     } catch {
         options.onError();
     } finally {
@@ -489,98 +543,216 @@ const submitCode = async (options: UploadCustomRequestOptions) => {
 
 const submissionPage = ref(1);
 const submissionPageCount = ref(0);
-const submissionData = reactive<(Omit<ApiExperimentSubmissions['rows'][number], 'submitTime'> & { submitTime: Date })[]>([]);
+const submissionData = reactive<
+    (Omit<ApiExperimentSubmissions['rows'][number], 'submitTime'> & {
+        submitTime: Date;
+    })[]
+>([]);
 const submissionDataSpecial = reactive<ApiExperimentSubmissions['special']>({});
 const submissionDataSelf = ref(false);
 const submissionDataAccepted = ref(false);
 const updateSubmissionDataLoading = ref(false);
-const updateSubmissionData = (expid: any, page: number, self: boolean, accepted: boolean) => (updateSubmissionDataLoading.value = true) && http
-    .query({ page, self, accepted })
-    .get(`/experiments/${expid}/submissions`)
-    .json<ApiExperimentSubmissions>()
-    .then(r => {
+const updateSubmissionData = async (
+    expid: number,
+    page: number,
+    self: boolean,
+    accepted: boolean,
+) => {
+    try {
+        updateSubmissionDataLoading.value = true;
+        const r = await http
+            .query({ page, self, accepted })
+            .get(`/experiments/${expid}/submissions`)
+            .json<ApiExperimentSubmissions>();
         submissionData.length = 0;
-        submissionData.push(...r.rows.map(e => Object.assign(e, { submitTime: new Date(e.submitTime) })));
+        submissionData.push(
+            ...r.rows.map(e =>
+                Object.assign(e, { submitTime: new Date(e.submitTime) }),
+            ),
+        );
         submissionPageCount.value = r.pages;
         Object.assign(submissionDataSpecial, r.special);
-    })
-    .finally(() => updateSubmissionDataLoading.value = false);
+    } catch {
+    } finally {
+        updateSubmissionDataLoading.value = false;
+    }
+};
 
-onMounted(() => updateSubmissionData(route.params.expid, (submissionPage.value = 1), submissionDataSelf.value, submissionDataAccepted.value));
-onBeforeRouteUpdate(to => { updateSubmissionData(to.params.expid, (submissionPage.value = 1), submissionDataSelf.value, submissionDataAccepted.value) });
+onMounted(() => {
+    submissionPage.value = 1;
+    updateSubmissionData(
+        parseInt(route.params.expid as string, 10),
+        submissionPage.value,
+        submissionDataSelf.value,
+        submissionDataAccepted.value,
+    );
+});
+onBeforeRouteUpdate(to => {
+    submissionPage.value = 1;
+    updateSubmissionData(
+        parseInt(to.params.expid as string, 10),
+        submissionPage.value,
+        submissionDataSelf.value,
+        submissionDataAccepted.value,
+    );
+});
 
-const showSubmissionResult = (submission: Omit<ApiExperimentSubmissions['rows'][number], 'submitTime'> & { submitTime: Date }) => {
-    const codeUrl = submission.code !== null ? URL.createObjectURL(new Blob([submission.code], { type : 'plain/text' })) : '';
+const showSubmissionResult = (
+    submission: Omit<ApiExperimentSubmissions['rows'][number], 'submitTime'> & {
+        submitTime: Date;
+    },
+) => {
+    const codeUrl =
+        submission.code !== null
+            ? URL.createObjectURL(
+                  new Blob([submission.code], { type: 'plain/text' }),
+              )
+            : '';
     window.chiya.dialog.create({
         title: `提交记录 #${submission.subid}`,
-        content: () => h(NSpace, { vertical: true, style: 'max-height:calc(100vh - 160px);overflow-y:auto' }, () => [
-            h('div', { style: 'display:flex;align-items:center' }, [
-                h(NH3, { style: 'margin:0' }, () => '源代码'),
-                h('div', { style: 'flex-grow:1' }),
-                ...(submission.code !== null ? [
-                    h(NA, { href: codeUrl, download: `submission-${submission.subid}.${submission.language}` }, () => '保存'),
-                ] : []),
-            ]),
-            ...(submission.code !== null ? [
-                h(NCode, {
-                    hljs,
-                    code: submission.code,
-                    language: submission.language,
-                    showLineNumbers: true,
-                    style: 'max-height:360px;overflow-y:auto',
-                }),
-            ] : [
-                h(NText, { depth: 3 }, () => '只有提交的用户自己才可以查看'),
-            ]),
-            h(NH3, { style: 'margin:0' }, () => '编译输出'),
-            ...(submission.compileOutput !== null ? [
-                submission.compileOutput
-                    ? h(NLog, { log: submission.compileOutput, rows: 15 })
-                    : h(NText, { depth: 3 }, () => '没有输出'),
-            ] : [
-                h(NText, { depth: 3 }, () => submission.pending ? '请等待评测完成' : '只有提交的用户自己才可以查看'),
-            ]),
-            ...(submission.result?.length ? [
-                h(NH3, { style: 'margin:0' }, () => '评测结果'),
-                h(NTable, () => [
-                    h(NThead, { style: 'display:table;table-layout:fixed;width:100%' }, () => [
-                        h(NTr, () => [
-                            h(NTh, () => '测试点'),
-                            h(NTh, () => '时间'),
-                            h(NTh, () => '内存'),
-                            h(NTh, () => '结果'),
-                            h(NTh, () => '提示'),
-                        ]),
+        content: () =>
+            h(
+                NSpace,
+                {
+                    vertical: true,
+                    style: 'max-height:calc(100vh - 160px);overflow-y:auto',
+                },
+                () => [
+                    h('div', { style: 'display:flex;align-items:center' }, [
+                        h(NH3, { style: 'margin:0' }, () => '源代码'),
+                        h('div', { style: 'flex-grow:1' }),
+                        ...(submission.code !== null
+                            ? [
+                                  h(
+                                      NA,
+                                      {
+                                          href: codeUrl,
+                                          download: `submission-${submission.subid}.${submission.language}`,
+                                      },
+                                      () => '保存',
+                                  ),
+                              ]
+                            : []),
                     ]),
-                    h(NTbody, { style: 'display:block;max-height:250px;overflow-y:auto' }, () => submission.result!.map((e, i) => [
-                        h(NTr, { style: 'display:table;table-layout:fixed;width:100%' }, () => [
-                            h(NTd, () => `#${i + 1}`),
-                            h(NTd, () => `${e.time} ms`),
-                            h(NTd, () => formatSize(e.memory)),
-                            h(NTd, () => h(
-                                NText,
-                                {
-                                    type: e.status === 'Accepted' ? 'success' : 'error',
-                                    underline: !!e.stderr,
-                                    title: e.stderr,
-                                    style: e.stderr ? {
-                                        textDecorationStyle: 'dashed',
-                                        cursor: 'help',
-                                    } : null,
-                                },
-                                e.status,
-                            )),
-                            h(NTd, () => experiment.checkpointNotes[i] || ''),
-                        ]),
-                    ])),
-                ]),
-            ] : []),
-        ]),
+                    ...(submission.code !== null
+                        ? [
+                              h(NCode, {
+                                  hljs,
+                                  code: submission.code,
+                                  language: submission.language,
+                                  showLineNumbers: true,
+                                  style: 'max-height:360px;overflow-y:auto',
+                              }),
+                          ]
+                        : [
+                              h(
+                                  NText,
+                                  { depth: 3 },
+                                  () => '只有提交的用户自己才可以查看',
+                              ),
+                          ]),
+                    h(NH3, { style: 'margin:0' }, () => '编译输出'),
+                    ...(submission.compileOutput !== null
+                        ? [
+                              submission.compileOutput
+                                  ? h(NLog, {
+                                        log: submission.compileOutput,
+                                        rows: 15,
+                                    })
+                                  : h(NText, { depth: 3 }, () => '没有输出'),
+                          ]
+                        : [
+                              h(NText, { depth: 3 }, () =>
+                                  submission.pending
+                                      ? '请等待评测完成'
+                                      : '只有提交的用户自己才可以查看',
+                              ),
+                          ]),
+                    ...(submission.result?.length
+                        ? [
+                              h(NH3, { style: 'margin:0' }, () => '评测结果'),
+                              h(NTable, () => [
+                                  h(
+                                      NThead,
+                                      {
+                                          style: 'display:table;table-layout:fixed;width:100%',
+                                      },
+                                      () => [
+                                          h(NTr, () => [
+                                              h(NTh, () => '测试点'),
+                                              h(NTh, () => '时间'),
+                                              h(NTh, () => '内存'),
+                                              h(NTh, () => '结果'),
+                                              h(NTh, () => '提示'),
+                                          ]),
+                                      ],
+                                  ),
+                                  h(
+                                      NTbody,
+                                      {
+                                          style: 'display:block;max-height:250px;overflow-y:auto',
+                                      },
+                                      () =>
+                                          submission.result?.map((e, i) => [
+                                              h(
+                                                  NTr,
+                                                  {
+                                                      style: 'display:table;table-layout:fixed;width:100%',
+                                                  },
+                                                  () => [
+                                                      h(NTd, () => `#${i + 1}`),
+                                                      h(
+                                                          NTd,
+                                                          () => `${e.time} ms`,
+                                                      ),
+                                                      h(NTd, () =>
+                                                          formatSize(e.memory),
+                                                      ),
+                                                      h(NTd, () =>
+                                                          h(
+                                                              NText,
+                                                              {
+                                                                  type:
+                                                                      e.status ===
+                                                                      'Accepted'
+                                                                          ? 'success'
+                                                                          : 'error',
+                                                                  underline:
+                                                                      !!e.stderr,
+                                                                  title: e.stderr,
+                                                                  style: e.stderr
+                                                                      ? {
+                                                                            textDecorationStyle:
+                                                                                'dashed',
+                                                                            cursor: 'help',
+                                                                        }
+                                                                      : null,
+                                                              },
+                                                              e.status,
+                                                          ),
+                                                      ),
+                                                      h(
+                                                          NTd,
+                                                          () =>
+                                                              experiment
+                                                                  .checkpointNotes[
+                                                                  i
+                                                              ] || '',
+                                                      ),
+                                                  ],
+                                              ),
+                                          ]),
+                                  ),
+                              ]),
+                          ]
+                        : []),
+                ],
+            ),
         positiveText: '确定',
         style: 'width:640px',
         onClose: () => URL.revokeObjectURL(codeUrl),
     });
-}
+};
 
 const submitReportFileList = ref<UploadFileInfo[]>([]);
 const submitReport = async (options: UploadCustomRequestOptions) => {
@@ -588,20 +760,21 @@ const submitReport = async (options: UploadCustomRequestOptions) => {
     let ps = true;
     const pf = () => {
         // -(1.001^{-x})+1
-        options.onProgress({ percent: (-Math.pow(1.001, -(Date.now() - pt)) + 1) * 100 });
+        options.onProgress({
+            percent: (-(1.001 ** -(Date.now() - pt)) + 1) * 100,
+        });
         if (ps) requestAnimationFrame(pf);
     };
     requestAnimationFrame(pf);
     try {
+        // biome-ignore lint/style/noNonNullAssertion: file 必定存在
         const file = options.file.file!;
-        const fd = new FormData;
+        const fd = new FormData();
         fd.append('file', file);
-        await http
-            .post(fd, `/experiments/${route.params.expid}/reports`)
-            .res()
+        await http.post(fd, `/experiments/${route.params.expid}/reports`).res();
         window.chiya.message.success('已提交实验报告');
         options.onFinish();
-        loadExperiment(route.params.expid);
+        loadExperiment(parseInt(route.params.expid as string, 10));
     } catch {
         options.onError();
     } finally {
@@ -610,15 +783,20 @@ const submitReport = async (options: UploadCustomRequestOptions) => {
     }
 };
 
-const rejudge = (subid: number) => http
-    .post(null, `/admin/submissions/${subid}/rejudge`)
-    .res()
-    .then(() => {
-        window.chiya.message.success(`已重新评测提交 #${subid}`);
-        updateSubmissionData(route.params.expid, submissionPage.value, submissionDataSelf.value, submissionDataAccepted.value);
-    });
+const rejudge = (subid: number) =>
+    http
+        .post(null, `/admin/submissions/${subid}/rejudge`)
+        .res()
+        .then(() => {
+            window.chiya.message.success(`已重新评测提交 #${subid}`);
+            updateSubmissionData(
+                parseInt(route.params.expid as string, 10),
+                submissionPage.value,
+                submissionDataSelf.value,
+                submissionDataAccepted.value,
+            );
+        });
 
 const mataraOkina = ref(0);
 const mataraOkinaTriggered = computed(() => mataraOkina.value >= 5);
-
 </script>

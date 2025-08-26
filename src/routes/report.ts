@@ -2,23 +2,38 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import stream from 'node:stream';
+import { and, eq, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, gte, lte, or, and, not, desc, count, sql } from 'drizzle-orm';
 
 import config from '../config.js';
 import db from '../database.js';
+import {
+    jwt,
+    jwtOptional,
+    jwtQuery,
+    rateLimiter,
+    validator,
+} from '../middlewares.js';
 import { experiments, reports } from '../schema.js';
-import { validator, jwt, jwtOptional, jwtQuery, rateLimiter } from '../middlewares.js';
 
-const app = new Hono<HonoSchema>;
+const app = new Hono<HonoSchema>();
 
 app.post(
     '/experiments/:expid{\\d+}/reports',
     jwt,
-    validator('form', z.object({
-        file: z.instanceof(File).refine(e => path.extname(e.name.toLowerCase()) === '.pdf' && e.size < config.sizeLimit.report),
-    })),
+    validator(
+        'form',
+        z.object({
+            file: z
+                .instanceof(File)
+                .refine(
+                    e =>
+                        path.extname(e.name.toLowerCase()) === '.pdf' &&
+                        e.size < config.sizeLimit.report,
+                ),
+        }),
+    ),
     rateLimiter({
         windowMs: config.rateLimit.report.window * 1e3,
         limit: config.rateLimit.report.limit,
@@ -26,19 +41,22 @@ app.post(
     }),
     async ctx => {
         const body = ctx.req.valid('form');
-        const now = new Date;
+        const now = new Date();
         const experimentRow = db
             .select({
                 endTime: experiments.endTime,
             })
             .from(experiments)
-            .where(and(
-                eq(experiments.expid, Number(ctx.req.param('expid'))),
-                lte(experiments.startTime, now.toISOString()),
-            ))
+            .where(
+                and(
+                    eq(experiments.expid, Number(ctx.req.param('expid'))),
+                    lte(experiments.startTime, now.toISOString()),
+                ),
+            )
             .get();
         if (!experimentRow) return ctx.json(null, 404);
-        if (new Date(experimentRow.endTime) < now) return ctx.json({ error: '实验已截止' }, 400);
+        if (new Date(experimentRow.endTime) < now)
+            return ctx.json({ error: '实验已截止' }, 400);
 
         const filename = crypto.randomUUID();
         await stream.promises.pipeline(
@@ -49,21 +67,23 @@ app.post(
         const reportRow = db
             .select()
             .from(reports)
-            .where(and(
-                eq(reports.expid, Number(ctx.req.param('expid'))),
-                eq(reports.uid, ctx.get('jwtPayload').uid),
-            ))
+            .where(
+                and(
+                    eq(reports.expid, Number(ctx.req.param('expid'))),
+                    eq(reports.uid, ctx.get('jwtPayload').uid),
+                ),
+            )
             .get();
         if (reportRow) {
-            await fs.promises.unlink(path.join('storage', reportRow.reportPath));
-            db
-                .update(reports)
+            await fs.promises.unlink(
+                path.join('storage', reportRow.reportPath),
+            );
+            db.update(reports)
                 .set({ reportPath: filename })
                 .where(eq(reports.reportid, reportRow.reportid))
                 .run();
         } else {
-            db
-                .insert(reports)
+            db.insert(reports)
                 .values({
                     expid: Number(ctx.req.param('expid')),
                     uid: ctx.get('jwtPayload').uid,
@@ -83,14 +103,20 @@ app.get(
         const row = db
             .select({ reportPath: reports.reportPath })
             .from(reports)
-            .where(and(
-                eq(reports.expid, Number(ctx.req.param('expid'))),
-                eq(reports.uid, ctx.get('jwtPayload').uid),
-            ))
+            .where(
+                and(
+                    eq(reports.expid, Number(ctx.req.param('expid'))),
+                    eq(reports.uid, ctx.get('jwtPayload').uid),
+                ),
+            )
             .get();
         if (!row) return ctx.body(null, 404);
         ctx.header('Content-Type', 'application/pdf');
-        return ctx.body(stream.Readable.toWeb(fs.createReadStream(path.join('storage', row.reportPath))) as ReadableStream);
+        return ctx.body(
+            stream.Readable.toWeb(
+                fs.createReadStream(path.join('storage', row.reportPath)),
+            ) as ReadableStream,
+        );
     },
 );
 

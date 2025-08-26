@@ -3,56 +3,57 @@ import yaml from 'js-yaml';
 
 type Config = {
     server: {
-        host: string,
-        port: number,
-    },
+        host: string;
+        port: number;
+    };
     auth: {
         captcha: {
-            site: string,
-            secret: string,
-        },
+            site: string;
+            secret: string;
+        };
         argon2: {
-            pepper: string,
-            memoryCost: number,
-            timeCost: number,
-            parallelism: number,
-        },
+            pepper: string;
+            memoryCost: number;
+            timeCost: number;
+            parallelism: number;
+        };
         jwt: {
-            secret: string,
-            expire: number,
-            refresh: number,
-        },
-        admin: string,
+            secret: string;
+            expire: number;
+            refresh: number;
+        };
+        admin: string;
         passwordReset: {
-            secret: string,
-            expire: number,
-        },
-    },
+            secret: string;
+            expire: number;
+        };
+    };
     sizeLimit: {
-        compileOutput: number,
-        runOutput: number,
-        code: number,
-        report: number,
-    },
+        compileOutput: number;
+        runOutput: number;
+        code: number;
+        report: number;
+    };
     rateLimit: {
         code: {
-            window: number,
-            limit: number,
-        },
+            window: number;
+            limit: number;
+        };
         report: {
-            window: number,
-            limit: number,
-        },
-    },
+            window: number;
+            limit: number;
+        };
+    };
     sandbox: {
-        endpoint: string,
-        token: string,
-        checkInterval: number,
-    },
+        endpoint: string;
+        token: string;
+        checkInterval: number;
+    };
 };
 
 const deepFreeze = <T extends object>(obj: T) => {
     for (const prop of Object.getOwnPropertyNames(obj)) {
+        // biome-ignore lint/suspicious/noExplicitAny: 确实是什么类型都有可能出现
         const value = (obj as any)[prop];
         if (value && typeof value === 'object') {
             deepFreeze(value);
@@ -61,4 +62,6 @@ const deepFreeze = <T extends object>(obj: T) => {
     return Object.freeze(obj);
 };
 
-export default deepFreeze(yaml.load(fs.readFileSync('config.yaml', { encoding: 'utf-8' })) as Config);
+export default deepFreeze(
+    yaml.load(fs.readFileSync('config.yaml', { encoding: 'utf-8' })) as Config,
+);

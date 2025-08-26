@@ -87,11 +87,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue';
-import { useRoute, useRouter, RouterLink, type RouteLocationRaw } from 'vue-router';
-import { zhCN, dateZhCN, lightTheme, darkTheme, useOsTheme, GlobalThemeOverrides, type MenuOption } from 'naive-ui';
 import hljs from 'highlight.js/lib/core';
 import katex from 'katex';
+import {
+    darkTheme,
+    dateZhCN,
+    GlobalThemeOverrides,
+    lightTheme,
+    type MenuOption,
+    useOsTheme,
+    zhCN,
+} from 'naive-ui';
+import { computed, h, onMounted, ref } from 'vue';
+import {
+    type RouteLocationRaw,
+    RouterLink,
+    useRoute,
+    useRouter,
+} from 'vue-router';
 import NMdi from './components/mdi.vue';
 import 'katex/dist/katex.css';
 import {
@@ -102,17 +115,19 @@ import {
     mdiMenu,
     mdiTools,
 } from '@mdi/js';
-
-import store, { tokenPayload, isMobile } from './store.js';
 import http, { type ApiExperimentList } from './request.js';
+import store, { isMobile, tokenPayload } from './store.js';
 
 const route = useRoute();
 const router = useRouter();
 const osTheme = useOsTheme();
-const theme = computed(() => osTheme.value === 'light' ? lightTheme : darkTheme);
+const theme = computed(() =>
+    osTheme.value === 'light' ? lightTheme : darkTheme,
+);
 const themeOverrides: GlobalThemeOverrides = {
     common: {
-        fontFamilyMono: 'v-mono, SFMono-Regular, Menlo, "Cascadia Code", Consolas, Courier, monospace',
+        fontFamilyMono:
+            'v-mono, SFMono-Regular, Menlo, "Cascadia Code", Consolas, Courier, monospace',
         fontWeightStrong: 'bold',
     },
 };
@@ -123,15 +138,12 @@ window.chiya.getCurrentRoute = () => router.currentRoute.value;
 const menuCollapsed = ref(false);
 const menuDrawer = ref(false);
 
-const makeMenuOption = (to: string, label: string, icon?: string) => ({
-    label: () => h(
-        RouterLink,
-        { to },
-        { default: () => label },
-    ),
-    key: to,
-    icon: icon ? () => h(NMdi, { icon }) : undefined,
-} as MenuOption);
+const makeMenuOption = (to: string, label: string, icon?: string) =>
+    ({
+        label: () => h(RouterLink, { to }, { default: () => label }),
+        key: to,
+        icon: icon ? () => h(NMdi, { icon }) : undefined,
+    }) as MenuOption;
 
 const menuOptions = computed(() => {
     return [
@@ -140,7 +152,9 @@ const menuOptions = computed(() => {
             label: '实验',
             key: '/experiments',
             icon: () => h(NMdi, { icon: mdiBookOpenBlankVariant }),
-            children: store.experiments.map(e => makeMenuOption(`/experiments/${e.expid}`, e.title)),
+            children: store.experiments.map(e =>
+                makeMenuOption(`/experiments/${e.expid}`, e.title),
+            ),
         } as MenuOption,
         {
             label: '工具',
@@ -160,6 +174,9 @@ const menuOptions = computed(() => {
 
 const menuValue = computed(() => route.path);
 
-onMounted(() => http.get('/experiments').json<ApiExperimentList>(r => store.experiments = r));
-
+onMounted(async () => {
+    store.experiments = await http
+        .get('/experiments')
+        .json<ApiExperimentList>();
+});
 </script>

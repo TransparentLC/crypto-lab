@@ -1,40 +1,36 @@
 import fs from 'node:fs';
-import { Hono } from 'hono';
-import { type HTTPResponseError } from 'hono/types';
-import { type ContentfulStatusCode } from 'hono/utils/http-status';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
+import { Hono } from 'hono';
+import type { HTTPResponseError } from 'hono/types';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
-import config from './config.js';
-import { logger } from './middlewares.js';
-import { judgeLoop } from './sandbox.js';
-
-import commonApiRoutes from './routes/common.js';
-import adminApiRoutes from './routes/admin.js';
-import experimentApiRoutes from './routes/experiment.js';
-import reportApiRoutes from './routes/report.js';
+import config from './config';
+import { logger } from './middlewares';
+import apiRoutes from './routes';
+import { judgeLoop } from './sandbox';
 
 if (!fs.existsSync('storage')) fs.mkdirSync('storage');
 
-const app = new Hono<HonoSchema>;
+const app = new Hono<HonoSchema>();
 
-app
-    .use(logger)
+app.use(logger)
     .onError((err, ctx) => {
-        let statusCode = (err as HTTPResponseError).getResponse?.().status as ContentfulStatusCode;
+        let statusCode = (err as HTTPResponseError).getResponse?.()
+            .status as ContentfulStatusCode;
         if (!statusCode) {
             statusCode = 500;
             console.error(err);
         }
         return ctx.json({ error: err.message }, statusCode);
     })
-    .route('/api/', commonApiRoutes)
-    .route('/api/', adminApiRoutes)
-    .route('/api/', experimentApiRoutes)
-    .route('/api/', reportApiRoutes)
+    .route('/api', apiRoutes)
     .use(serveStatic({ root: './public' }));
 
-if (typeof config.server.port === 'string' && fs.existsSync(config.server.port)) {
+if (
+    typeof config.server.port === 'string' &&
+    fs.existsSync(config.server.port)
+) {
     fs.unlinkSync(config.server.port);
 }
 

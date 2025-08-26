@@ -122,11 +122,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { NText, useThemeVars } from 'naive-ui';
+import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import VueTurnstile from 'vue-turnstile';
-import { NText, useThemeVars } from 'naive-ui';
-import http, { type ApiResetPassword, type ApiLogin } from '../request.js';
+import http, { type ApiLogin, type ApiResetPassword } from '../request.js';
 import store from '../store.js';
 
 const router = useRouter();
@@ -143,17 +143,27 @@ const formLoginValue = reactive({
 });
 
 const login = async () => {
-    if (loading.value || !formLoginValue.username || !formLoginValue.password || !formLoginValue.captcha) return;
+    if (
+        loading.value ||
+        !formLoginValue.username ||
+        !formLoginValue.password ||
+        !formLoginValue.captcha
+    )
+        return;
     try {
         loading.value = true;
-        const r = await http
-            .post(formLoginValue, '/login')
-            .json<ApiLogin>();
-        localStorage.setItem('token', store.token = r.token);
+        const r = await http.post(formLoginValue, '/login').json<ApiLogin>();
+        store.token = r.token;
+        localStorage.setItem('token', store.token);
         window.chiya.message.success('登录成功');
         const route = router.currentRoute.value;
-        router.push((Array.isArray(route.query.redirect) ? route.query.redirect[0] : route.query.redirect) || '/');
-    } catch {} finally {
+        router.push(
+            (Array.isArray(route.query.redirect)
+                ? route.query.redirect[0]
+                : route.query.redirect) || '/',
+        );
+    } catch {
+    } finally {
         loading.value = false;
         captchaLogin.value?.reset();
     }
@@ -166,7 +176,12 @@ const formResetPasswordValue = reactive({
 });
 
 const resetPassword = async () => {
-    if (loading.value || !formResetPasswordValue.token || !formResetPasswordValue.captcha) return;
+    if (
+        loading.value ||
+        !formResetPasswordValue.token ||
+        !formResetPasswordValue.captcha
+    )
+        return;
     try {
         loading.value = true;
         const r = await http
@@ -176,21 +191,30 @@ const resetPassword = async () => {
             title: '重设密码',
             content: () => [
                 `已将用户 #${r.uid} “${r.username}”的密码重设为 `,
-                h(NText, {
-                    code: true,
-                    onClick: () => navigator.clipboard.writeText(r.password).then(() => window.chiya.message.success('已复制密码')),
-                    style: { cursor: 'pointer' },
-                }, () => r.password),
+                h(
+                    NText,
+                    {
+                        code: true,
+                        onClick: () =>
+                            navigator.clipboard
+                                .writeText(r.password)
+                                .then(() =>
+                                    window.chiya.message.success('已复制密码'),
+                                ),
+                        style: { cursor: 'pointer' },
+                    },
+                    () => r.password,
+                ),
                 '（点击复制），此密码不会再显示，请注意保存。',
             ],
             positiveText: '确认',
             maskClosable: false,
         });
         formResetPasswordValue.token = '';
-    } catch {} finally {
+    } catch {
+    } finally {
         loading.value = false;
         captchaResetPassword.value?.reset();
     }
 };
-
 </script>

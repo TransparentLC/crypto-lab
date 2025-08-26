@@ -7,39 +7,46 @@ export default createRouter({
     routes: [
         {
             path: '/',
-            component: () => import(/* vitePrefetch: true */ './pages/home.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/home.vue'),
             meta: {
                 keepAlive: true,
             },
         },
         {
             path: '/login',
-            component: () => import(/* vitePrefetch: true */ './pages/login.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/login.vue'),
         },
         {
             path: '/account',
-            component: () => import(/* vitePrefetch: true */ './pages/account.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/account.vue'),
             beforeEnter: () => {
-                if (!store.token) return {
-                    path: '/login',
-                    replace: true,
-                };
+                if (!store.token)
+                    return {
+                        path: '/login',
+                        replace: true,
+                    };
             },
         },
         {
             path: '/experiments/:expid(\\d+)',
-            component: () => import(/* vitePrefetch: true */ './pages/experiments.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/experiments.vue'),
         },
         {
             path: '/tools/hex2bin',
-            component: () => import(/* vitePrefetch: true */ './pages/hex2bin.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/hex2bin.vue'),
             meta: {
                 keepAlive: true,
             },
         },
         {
             path: '/tools/statistics',
-            component: () => import(/* vitePrefetch: true */ './pages/statistics.vue'),
+            component: () =>
+                import(/* vitePrefetch: true */ './pages/statistics.vue'),
             meta: {
                 keepAlive: true,
             },
@@ -48,15 +55,16 @@ export default createRouter({
             path: '/admin',
             component: () => import('./pages/admin.vue'),
             beforeEnter: () => {
-                if (!store.token || tokenPayload.value?.role !== 'admin') return {
-                    path: '/',
-                    replace: true,
-                };
+                if (!store.token || tokenPayload.value?.role !== 'admin')
+                    return {
+                        path: '/',
+                        replace: true,
+                    };
             },
         },
         {
             path: '/:path(.*)*',
             redirect: '/',
-        }
+        },
     ],
 });

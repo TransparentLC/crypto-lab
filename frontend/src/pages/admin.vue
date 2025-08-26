@@ -281,60 +281,79 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, h } from 'vue';
-import { NButton, NSwitch, NInput, NText, NCode, NTime } from 'naive-ui';
-import { mdiTagEditOutline, mdiFileUploadOutline, mdiClose, mdiDownload, mdiLockReset } from '@mdi/js';
-import NMdi from '../components/mdi.vue';
-import http, { type ApiAdminUsers, type ApiAdminUserCreate, type ApiExperimentList, type ApiAdminExperiment, ApiAdminUserPasswordResetToken } from '../request.js';
+import {
+    mdiClose,
+    mdiDownload,
+    mdiFileUploadOutline,
+    mdiLockReset,
+    mdiTagEditOutline,
+} from '@mdi/js';
+import { NButton, NCode, NInput, NSwitch, NText, NTime } from 'naive-ui';
+import { h, onMounted, reactive, ref } from 'vue';
 import NMarked from '../components/marked.js';
+import NMdi from '../components/mdi.vue';
+import http, {
+    type ApiAdminExperiment,
+    type ApiAdminUserCreate,
+    ApiAdminUserPasswordResetToken,
+    type ApiAdminUsers,
+    type ApiExperimentList,
+} from '../request.js';
 import store from '../store.js';
 
 const userPage = ref(1);
 const userPageCount = ref(0);
 const userData = reactive<ApiAdminUsers['rows']>([]);
-const updateUserData = (page: number = 1) => http
-    .query({ page })
-    .get('/admin/users')
-    .json<ApiAdminUsers>()
-    .then(r => {
-        userData.length = 0;
-        userData.push(...r.rows);
-        userPageCount.value = r.pages;
-    });
+const updateUserData = (page: number = 1) =>
+    http
+        .query({ page })
+        .get('/admin/users')
+        .json<ApiAdminUsers>()
+        .then(r => {
+            userData.length = 0;
+            userData.push(...r.rows);
+            userPageCount.value = r.pages;
+        });
 
 onMounted(() => updateUserData());
 
 const getPasswordResetToken = async (user: ApiAdminUsers['rows'][number]) => {
     const r = await http
-            .post(null, `/admin/users/${user.uid}/password-reset-token`)
-            .json<ApiAdminUserPasswordResetToken>();
-        window.chiya.dialog.create({
-            title: `重设密码 #${user.uid}`,
-            content: () => [
-                `已为用户 #${user.uid} 生成重设密码令牌（点击复制）：`,
-                h(NCode, {
-                    code: r.token,
-                    wordWrap: true,
-                    onClick: () => navigator.clipboard.writeText(r.token).then(() => window.chiya.message.success('已复制令牌')),
-                    style: { cursor: 'pointer' },
-                }),
-                '令牌可以在 ',
-                h(NTime, { time: new Date(r.expire) }),
-                ' 前使用一次，使用后之前生成的令牌将会作废。',
-            ],
-            positiveText: '确认',
-            maskClosable: false,
-        });
+        .post(null, `/admin/users/${user.uid}/password-reset-token`)
+        .json<ApiAdminUserPasswordResetToken>();
+    window.chiya.dialog.create({
+        title: `重设密码 #${user.uid}`,
+        content: () => [
+            `已为用户 #${user.uid} 生成重设密码令牌（点击复制）：`,
+            h(NCode, {
+                code: r.token,
+                wordWrap: true,
+                onClick: () =>
+                    navigator.clipboard
+                        .writeText(r.token)
+                        .then(() => window.chiya.message.success('已复制令牌')),
+                style: { cursor: 'pointer' },
+            }),
+            '令牌可以在 ',
+            h(NTime, { time: new Date(r.expire) }),
+            ' 前使用一次，使用后之前生成的令牌将会作废。',
+        ],
+        positiveText: '确认',
+        maskClosable: false,
+    });
 };
 const changeUsername = (user: ApiAdminUsers['rows'][number]) => {
     let value = user.username;
     const d = window.chiya.dialog.create({
         title: `修改用户名 #${user.uid}`,
-        content: () => h(NInput, {
-            placeholder: '',
-            defaultValue: value,
-            'onUpdate:value': (e: string) => value = e,
-        }),
+        content: () =>
+            h(NInput, {
+                placeholder: '',
+                defaultValue: value,
+                'onUpdate:value': (e: string) => {
+                    value = e;
+                },
+            }),
         positiveText: '确定',
         negativeText: '取消',
         onPositiveClick: async () => {
@@ -344,16 +363,26 @@ const changeUsername = (user: ApiAdminUsers['rows'][number]) => {
                 .patch({ username: value }, `/admin/users/${user.uid}`)
                 .res()
                 .then(() => {
-                    window.chiya.message.success(`已将 #${user.uid} 的用户名修改为“${value}”`);
+                    window.chiya.message.success(
+                        `已将 #${user.uid} 的用户名修改为“${value}”`,
+                    );
                     updateUserData(userPageCount.value);
                 });
         },
     });
 };
-const changeUserEnabled = (user: ApiAdminUsers['rows'][number], enabled: boolean) => http
-    .patch({ enabled }, `/admin/users/${user.uid}`)
-    .res()
-    .then(() => window.chiya.message.success(`已${enabled ? '启用' : '禁用'}用户“${user.username}”`));
+const changeUserEnabled = (
+    user: ApiAdminUsers['rows'][number],
+    enabled: boolean,
+) =>
+    http
+        .patch({ enabled }, `/admin/users/${user.uid}`)
+        .res()
+        .then(() =>
+            window.chiya.message.success(
+                `已${enabled ? '启用' : '禁用'}用户“${user.username}”`,
+            ),
+        );
 
 const formCreateUser = reactive({
     username: '',
@@ -372,11 +401,20 @@ const createUser = async () => {
                 `已添加用户“${username}”。`,
                 h('br'),
                 '该用户的初始密码为 ',
-                h(NText, {
-                    code: true,
-                    onClick: () => navigator.clipboard.writeText(r.password).then(() => window.chiya.message.success('已复制密码')),
-                    style: { cursor: 'pointer' },
-                }, () => r.password),
+                h(
+                    NText,
+                    {
+                        code: true,
+                        onClick: () =>
+                            navigator.clipboard
+                                .writeText(r.password)
+                                .then(() =>
+                                    window.chiya.message.success('已复制密码'),
+                                ),
+                        style: { cursor: 'pointer' },
+                    },
+                    () => r.password,
+                ),
                 '（点击复制），此密码不会再显示，请注意保存。',
             ],
             positiveText: '确认',
@@ -384,20 +422,22 @@ const createUser = async () => {
         });
         formCreateUser.username = '';
         updateUserData();
-    } catch {} finally {
+    } catch {
+    } finally {
         createUserLoading.value = false;
     }
 };
 
 const experimentData = reactive<ApiExperimentList>([]);
 
-const updateExperimentData = () => http
-    .get('/admin/experiments')
-    .json<ApiExperimentList>()
-    .then(r => {
-        experimentData.length = 0;
-        experimentData.push(...r);
-    });
+const updateExperimentData = () =>
+    http
+        .get('/admin/experiments')
+        .json<ApiExperimentList>()
+        .then(r => {
+            experimentData.length = 0;
+            experimentData.push(...r);
+        });
 
 onMounted(() => updateExperimentData());
 
@@ -405,12 +445,11 @@ const createExperimentLoading = ref(false);
 const createExperiment = async () => {
     try {
         createExperimentLoading.value = true;
-        await http
-            .post(null, '/admin/experiments')
-            .res();
+        await http.post(null, '/admin/experiments').res();
         window.chiya.message.success('已创建实验');
         updateExperimentData();
-    } catch {} finally {
+    } catch {
+    } finally {
         createExperimentLoading.value = false;
     }
 };
@@ -432,18 +471,26 @@ const experimentConfig = reactive({
 const experimentCheckpointFileInput = ref<HTMLInputElement | null>(null);
 const experimentCheckpointFile = ref<File | undefined>(undefined);
 
-const loadExperiment = (expid: number) => http
-    .get(`/admin/experiments/${expid}`)
-    .json<ApiAdminExperiment>()
-    .then(r => {
-        experimentCurrentId.value = expid;
-        Object.assign(experimentConfig, r);
-        experimentConfig.rangeTime = [(new Date(r.startTime)).getTime(), (new Date(r.endTime)).getTime()];
-        experimentConfig.compileCommands = Object.entries(r.compileCommands);
-        experimentCheckpointFile.value = undefined;
-        experimentCheckpointFileInput.value && (experimentCheckpointFileInput.value.value = '');
-        window.chiya.message.success(`已读取实验 #${expid}`);
-    });
+const loadExperiment = (expid: number) =>
+    http
+        .get(`/admin/experiments/${expid}`)
+        .json<ApiAdminExperiment>()
+        .then(r => {
+            experimentCurrentId.value = expid;
+            Object.assign(experimentConfig, r);
+            experimentConfig.rangeTime = [
+                new Date(r.startTime).getTime(),
+                new Date(r.endTime).getTime(),
+            ];
+            experimentConfig.compileCommands = Object.entries(
+                r.compileCommands,
+            );
+            experimentCheckpointFile.value = undefined;
+            if (experimentCheckpointFileInput.value) {
+                experimentCheckpointFileInput.value.value = '';
+            }
+            window.chiya.message.success(`已读取实验 #${expid}`);
+        });
 
 const editExperimentLoading = ref(false);
 const editExperiment = async () => {
@@ -452,40 +499,65 @@ const editExperiment = async () => {
         await Promise.all([
             experimentCheckpointFile.value
                 ? http
-                    .post(
-                        Object.entries({
-                            file: experimentCheckpointFile.value,
-                        } as Record<string, string | Blob>).reduce((a, [k, v]) => { a.append(k, v); return a; }, new FormData),
-                        `/admin/experiments/${experimentCurrentId.value}/checkpoint`,
-                    )
-                    .res()
+                      .post(
+                          Object.entries({
+                              file: experimentCheckpointFile.value,
+                          } as Record<string, string | Blob>).reduce(
+                              (a, [k, v]) => {
+                                  a.append(k, v);
+                                  return a;
+                              },
+                              new FormData(),
+                          ),
+                          `/admin/experiments/${experimentCurrentId.value}/checkpoint`,
+                      )
+                      .res()
                 : Promise.resolve(),
             http
-                .patch({
-                    title: experimentConfig.title,
-                    description: experimentConfig.description,
-                    reportSubmission: experimentConfig.reportSubmission,
-                    cpuLimit: experimentConfig.cpuLimit,
-                    compileTimeLimit: experimentConfig.compileTimeLimit,
-                    compileMemoryLimit: experimentConfig.compileMemoryLimit,
-                    runTimeLimit: experimentConfig.runTimeLimit,
-                    runMemoryLimit: experimentConfig.runMemoryLimit,
-                    startTime: new Date(experimentConfig.rangeTime[0]).toISOString(),
-                    endTime: new Date(experimentConfig.rangeTime[1]).toISOString(),
-                    compileCommands: Object.fromEntries(experimentConfig.compileCommands),
-                }, `/admin/experiments/${experimentCurrentId.value}`)
+                .patch(
+                    {
+                        title: experimentConfig.title,
+                        description: experimentConfig.description,
+                        reportSubmission: experimentConfig.reportSubmission,
+                        cpuLimit: experimentConfig.cpuLimit,
+                        compileTimeLimit: experimentConfig.compileTimeLimit,
+                        compileMemoryLimit: experimentConfig.compileMemoryLimit,
+                        runTimeLimit: experimentConfig.runTimeLimit,
+                        runMemoryLimit: experimentConfig.runMemoryLimit,
+                        startTime: new Date(
+                            experimentConfig.rangeTime[0],
+                        ).toISOString(),
+                        endTime: new Date(
+                            experimentConfig.rangeTime[1],
+                        ).toISOString(),
+                        compileCommands: Object.fromEntries(
+                            experimentConfig.compileCommands,
+                        ),
+                    },
+                    `/admin/experiments/${experimentCurrentId.value}`,
+                )
                 .res(),
         ]);
-        window.chiya.message.success(`已修改实验 #${experimentCurrentId.value}`);
+        window.chiya.message.success(
+            `已修改实验 #${experimentCurrentId.value}`,
+        );
         updateExperimentData();
-    } catch {} finally {
+    } catch {
+    } finally {
         editExperimentLoading.value = false;
     }
 };
 
-const obsoleteRejudge = () => http
-    .post(null, `/admin/experiments/${experimentCurrentId.value}/obsolete-rejudge`)
-    .res()
-    .then(() => window.chiya.message.success(`已重新评测实验 #${experimentCurrentId.value}`));
-
+const obsoleteRejudge = () =>
+    http
+        .post(
+            null,
+            `/admin/experiments/${experimentCurrentId.value}/obsolete-rejudge`,
+        )
+        .res()
+        .then(() =>
+            window.chiya.message.success(
+                `已重新评测实验 #${experimentCurrentId.value}`,
+            ),
+        );
 </script>

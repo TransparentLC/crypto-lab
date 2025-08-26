@@ -16,9 +16,9 @@ import { NIcon } from 'naive-ui';
 type NIconProps = InstanceType<typeof NIcon>['$props'];
 
 defineProps<{
-    icon: string,
-    color?: NIconProps['color'],
-    depth?: NIconProps['depth'],
-    size?: NIconProps['size'],
+    icon: string;
+    color?: NIconProps['color'];
+    depth?: NIconProps['depth'];
+    size?: NIconProps['size'];
 }>();
 </script>

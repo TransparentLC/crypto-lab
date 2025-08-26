@@ -87,9 +87,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { mdiRefresh } from '@mdi/js';
-import { Chart, Legend, Tooltip, LinearScale, TimeScale, PointElement, LineElement } from 'chart.js';
+import {
+    Chart,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    TimeScale,
+    Tooltip,
+} from 'chart.js';
+import { onMounted, ref } from 'vue';
 import { Line as LineChart } from 'vue-chartjs';
 import 'chartjs-adapter-date-fns';
 import chartjsZoomPlugin from 'chartjs-plugin-zoom';
@@ -97,7 +105,15 @@ import NMdi from '../components/mdi.vue';
 import http, { type ApiStatistics } from '../request.js';
 import { isMobile } from '../store.js';
 
-Chart.register(Legend, Tooltip, LinearScale, TimeScale, PointElement, LineElement, chartjsZoomPlugin);
+Chart.register(
+    Legend,
+    Tooltip,
+    LinearScale,
+    TimeScale,
+    PointElement,
+    LineElement,
+    chartjsZoomPlugin,
+);
 
 const chartLoading = ref(false);
 
@@ -106,11 +122,12 @@ const statisticsData = ref<ApiStatistics>([]);
 const refresh = async () => {
     chartLoading.value = true;
     try {
-        await http
+        statisticsData.value = await http
             .get('/statistics')
             .json<ApiStatistics>()
-            .then(r => statisticsData.value = r);
-    } catch {} finally {
+            .then();
+    } catch {
+    } finally {
         chartLoading.value = false;
     }
 };

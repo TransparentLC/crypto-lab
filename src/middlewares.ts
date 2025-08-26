@@ -1,7 +1,7 @@
-import { type MiddlewareHandler } from 'hono';
-import { jwt as honoJwt, decode, verify } from 'hono/jwt';
-import { rateLimiter as honoRateLimiter } from 'hono-rate-limiter';
 import { zValidator } from '@hono/zod-validator';
+import type { MiddlewareHandler } from 'hono';
+import { jwt as honoJwt, verify } from 'hono/jwt';
+import { rateLimiter as honoRateLimiter } from 'hono-rate-limiter';
 import { fromError } from 'zod-validation-error';
 
 import config from './config.js';
@@ -15,9 +15,10 @@ export const logger: MiddlewareHandler = async (ctx, next) => {
     const statusString = process.env.NO_COLOR
         ? statusCode.toString()
         : `\x1b[${[39, 94, 92, 96, 93, 91, 95][(statusCode / 100) | 0]}m${statusCode}\x1b[0m`;
-    const remoteAddress = ctx.req.header('X-Real-IP')
-        ?? ctx.req.header('X-Forwarded-For')?.split(',').pop()?.trim()
-        ?? ctx.env.incoming.socket.remoteAddress;
+    const remoteAddress =
+        ctx.req.header('X-Real-IP') ??
+        ctx.req.header('X-Forwarded-For')?.split(',').pop()?.trim() ??
+        ctx.env.incoming.socket.remoteAddress;
     console.log(
         new Date().toISOString(),
         '-',
@@ -34,7 +35,11 @@ export const jwt = honoJwt({ secret: config.auth.jwt.secret });
 export const jwtQuery: MiddlewareHandler = async (ctx, next) => {
     if (!ctx.get('jwtPayload')) {
         const token = ctx.req.query('token');
-        if (!token) return ctx.json({ error: 'no authorization included in request' }, 403);
+        if (!token)
+            return ctx.json(
+                { error: 'no authorization included in request' },
+                403,
+            );
         try {
             ctx.set('jwtPayload', await verify(token, config.auth.jwt.secret));
         } catch {
@@ -44,28 +49,33 @@ export const jwtQuery: MiddlewareHandler = async (ctx, next) => {
     await next();
 };
 
-export const jwtOptional: MiddlewareHandler = async (ctx, next) => await (
-    ctx.req.header('Authorization')
-        ? jwt(ctx, next)
-        : next()
-);
+export const jwtOptional: MiddlewareHandler = async (ctx, next) =>
+    await (ctx.req.header('Authorization') ? jwt(ctx, next) : next());
 
 export const ensureAdmin: MiddlewareHandler = async (ctx, next) => {
-    if (ctx.get('jwtPayload').role !== 'admin') return ctx.json({ error: '仅管理员可以操作' }, 403);
+    if (ctx.get('jwtPayload').role !== 'admin')
+        return ctx.json({ error: '仅管理员可以操作' }, 403);
     await next();
 };
 
-// @ts-ignore
-export const validator: typeof zValidator = (target, schema, hook) => zValidator(
-    target,
-    schema,
-    hook || ((result, ctx) => {
-        if (!result.success) return ctx.json({ error: fromError(result.error).toString() }, 400);
-    }),
-);
+export const validator: typeof zValidator = (target, schema, hook) =>
+    // @ts-expect-error
+    zValidator(
+        target,
+        schema,
+        hook ||
+            ((result, ctx) => {
+                if (!result.success)
+                    return ctx.json(
+                        { error: fromError(result.error).toString() },
+                        400,
+                    );
+            }),
+    );
 
-export const rateLimiter: typeof honoRateLimiter = (config) => honoRateLimiter({
-    standardHeaders: 'draft-7',
-    message: { error: 'Too many requests, please try again later.' },
-    ...config,
-});
+export const rateLimiter: typeof honoRateLimiter = config =>
+    honoRateLimiter({
+        standardHeaders: 'draft-7',
+        message: { error: 'Too many requests, please try again later.' },
+        ...config,
+    });

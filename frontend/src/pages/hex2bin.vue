@@ -17,16 +17,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useThemeVars } from 'naive-ui';
 import { mdiSwapHorizontal } from '@mdi/js';
+import { useThemeVars } from 'naive-ui';
+import { ref } from 'vue';
 import NMdi from '../components/mdi.vue';
 import { isMobile } from '../store.js';
 
 const themeVars = useThemeVars();
 
 const placeholder = [
-    ...Array.from(Array(4), () => Array.from(Array(isMobile.value ? 8 : 16), () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(' ')),
+    ...Array.from(Array(4), () =>
+        Array.from(Array(isMobile.value ? 8 : 16), () =>
+            Math.floor(Math.random() * 256)
+                .toString(16)
+                .padStart(2, '0')
+                .toUpperCase(),
+        ).join(' '),
+    ),
     '...',
 ].join('\n');
 
@@ -34,9 +41,16 @@ const hexdump = ref('');
 const convert = () => {
     const el = document.createElement('a');
     el.download = 'dump.bin';
-    el.href = URL.createObjectURL(new Blob([new Uint8Array((hexdump.value.match(/[\da-f]{1,2}/gi) ?? []).map(e => parseInt(e, 16)))]));
+    el.href = URL.createObjectURL(
+        new Blob([
+            new Uint8Array(
+                (hexdump.value.match(/[\da-f]{1,2}/gi) ?? []).map(e =>
+                    parseInt(e, 16),
+                ),
+            ),
+        ]),
+    );
     el.click();
     URL.revokeObjectURL(el.href);
 };
-
 </script>
