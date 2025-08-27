@@ -13,10 +13,12 @@ import { judgeLoop } from './sandbox';
 
 if (!fs.existsSync('storage')) fs.mkdirSync('storage');
 
-// 添加 Markdown 的 MIME 类型
+// 补充一些 MIME 类型
 // https://github.com/honojs/hono/blob/main/src/utils/mime.ts
-// @ts-expect-error
-mimes.md = 'text/markdown';
+Object.assign(mimes, {
+    md: 'text/markdown',
+    sh: 'text/x-shellscript',
+});
 
 const app = new Hono<HonoSchema>();
 

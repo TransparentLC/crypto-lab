@@ -14,7 +14,7 @@ import db from './database.js';
 import { experiments, submissions, users } from './schema.js';
 import { blobFromReadableStream, formdataFromRecord } from './util.js';
 
-const procLimit = 16;
+const procLimit = 64;
 const stderrLimit = 4096;
 const clockLimitFactor = 1.14514191981;
 

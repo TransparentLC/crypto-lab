@@ -18,7 +18,7 @@ import { blobFromReadableStream, formdataFromRecord } from '../src/util.js';
 // 流程和自动评测基本相同
 // pnpm exec tsx scripts/manual-judge.ts {subid}
 
-const procLimit = 16;
+const procLimit = 64;
 const stderrLimit = 4096;
 const clockLimitFactor = 1.14514191981;
 
