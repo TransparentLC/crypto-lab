@@ -165,7 +165,7 @@
                         </n-thead>
                         <n-tbody>
                             <n-tr v-for="[k, v] in Object.entries(experiment.compileCommands)">
-                                <n-td><n-text code>{{ k }}</n-text></n-td>
+                                <n-td><language-tag :language="k"></language-tag></n-td>
                                 <n-td><n-text code>{{ v }}</n-text></n-td>
                             </n-tr>
                         </n-tbody>
@@ -192,7 +192,7 @@
                                     <n-td>{{ e.subid }}</n-td>
                                     <n-td>{{ e.username }}</n-td>
                                     <n-td><n-time :time="e.submitTime"></n-time></n-td>
-                                    <n-td><n-text code>{{ e.language }}</n-text></n-td>
+                                    <n-td><language-tag :language="e.language"></language-tag></n-td>
                                     <n-td>{{ e.length }}</n-td>
                                     <n-td>
                                         <n-tag
@@ -430,6 +430,7 @@ import {
 } from 'naive-ui';
 import { computed, h, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
+import LanguageTag from '../components/language-tag.vue';
 import NMarked from '../components/marked.js';
 import NMdi from '../components/mdi.vue';
 import formatSize from '../format-size.js';
