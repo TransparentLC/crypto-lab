@@ -4,7 +4,7 @@ import { jwt as honoJwt, verify } from 'hono/jwt';
 import { rateLimiter as honoRateLimiter } from 'hono-rate-limiter';
 import { fromError } from 'zod-validation-error';
 
-import config from './config.js';
+import config from './config';
 
 export const logger: MiddlewareHandler = async (ctx, next) => {
     const startTime = performance.now();

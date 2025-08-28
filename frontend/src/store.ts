@@ -5,7 +5,7 @@ import ReconnectingEventSource from 'reconnecting-eventsource';
 import { computed, h, reactive, watch } from 'vue';
 
 import NMdi from './components/mdi.vue';
-import formatSize from './format-size.js';
+import formatSize from './format-size';
 
 const store = reactive({
     token: localStorage.getItem('token') || '',

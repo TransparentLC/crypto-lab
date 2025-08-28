@@ -102,8 +102,8 @@ import { Line as LineChart } from 'vue-chartjs';
 import 'chartjs-adapter-date-fns';
 import chartjsZoomPlugin from 'chartjs-plugin-zoom';
 import NMdi from '../components/mdi.vue';
-import http, { type ApiStatistics } from '../request.js';
-import { isMobile } from '../store.js';
+import http, { type ApiStatistics } from '../request';
+import { isMobile } from '../store';
 
 Chart.register(
     Legend,

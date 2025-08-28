@@ -290,7 +290,7 @@ import {
 } from '@mdi/js';
 import { NButton, NCode, NInput, NSwitch, NText, NTime } from 'naive-ui';
 import { h, onMounted, reactive, ref } from 'vue';
-import NMarked from '../components/marked.js';
+import NMarked from '../components/marked';
 import NMdi from '../components/mdi.vue';
 import http, {
     type ApiAdminExperiment,
@@ -298,8 +298,8 @@ import http, {
     ApiAdminUserPasswordResetToken,
     type ApiAdminUsers,
     type ApiExperimentList,
-} from '../request.js';
-import store from '../store.js';
+} from '../request';
+import store from '../store';
 
 const userPage = ref(1);
 const userPageCount = ref(0);

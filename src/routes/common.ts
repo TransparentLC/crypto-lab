@@ -6,16 +6,12 @@ import { streamSSE } from 'hono/streaming';
 import wretch from 'wretch';
 import { z } from 'zod';
 
-import config from '../config.js';
-import db from '../database.js';
-import { jwt, validator } from '../middlewares.js';
-import {
-    type CongratsEvent,
-    eventEmitter,
-    type JudgeEvent,
-} from '../sandbox.js';
-import { submissions, users } from '../schema.js';
-import { passwordGenerate, passwordHash, passwordVerify } from '../util.js';
+import config from '../config';
+import db from '../database';
+import { jwt, validator } from '../middlewares';
+import { type CongratsEvent, eventEmitter, type JudgeEvent } from '../sandbox';
+import { submissions, users } from '../schema';
+import { passwordGenerate, passwordHash, passwordVerify } from '../util';
 
 const app = new Hono<HonoSchema>();
 

@@ -9,12 +9,12 @@ import { Hono } from 'hono';
 import yaml from 'js-yaml';
 import StreamZip from 'node-stream-zip';
 import { z } from 'zod';
-import config from '../config.js';
-import db from '../database.js';
-import { ensureAdmin, jwt, jwtQuery, validator } from '../middlewares.js';
-import { judgeRightNow } from '../sandbox.js';
-import { experiments, reports, submissions, users } from '../schema.js';
-import { passwordGenerate, passwordHash } from '../util.js';
+import config from '../config';
+import db from '../database';
+import { ensureAdmin, jwt, jwtQuery, validator } from '../middlewares';
+import { judgeRightNow } from '../sandbox';
+import { experiments, reports, submissions, users } from '../schema';
+import { passwordGenerate, passwordHash } from '../util';
 
 const app = new Hono<HonoSchema>();
 

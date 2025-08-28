@@ -9,9 +9,9 @@ import hljsRust from 'highlight.js/lib/languages/rust';
 import { createApp } from 'vue';
 
 import app from './app.vue';
-import http, { type ApiSiteConfig } from './request.js';
-import router from './router.js';
-import store from './store.js';
+import http, { type ApiSiteConfig } from './request';
+import router from './router';
+import store from './store';
 
 store.siteConfig = await http.get('/site-config').json<ApiSiteConfig>();
 

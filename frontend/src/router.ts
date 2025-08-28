@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-import store, { tokenPayload } from './store.js';
+import store, { tokenPayload } from './store';
 
 export default createRouter({
     history: createWebHashHistory(),

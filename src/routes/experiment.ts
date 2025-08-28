@@ -6,11 +6,11 @@ import { Hono } from 'hono';
 import yaml from 'js-yaml';
 import { z } from 'zod';
 
-import config from '../config.js';
-import db from '../database.js';
-import { jwt, jwtOptional, rateLimiter, validator } from '../middlewares.js';
-import { judgeRightNow } from '../sandbox.js';
-import { experiments, reports, submissions, users } from '../schema.js';
+import config from '../config';
+import db from '../database';
+import { jwt, jwtOptional, rateLimiter, validator } from '../middlewares';
+import { judgeRightNow } from '../sandbox';
+import { experiments, reports, submissions, users } from '../schema';
 
 const app = new Hono<HonoSchema>();
 

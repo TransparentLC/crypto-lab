@@ -1,6 +1,6 @@
 import argon2 from '@node-rs/argon2';
 
-import config from './config.js';
+import config from './config';
 
 export const passwordHash = (password: string) =>
     argon2.hash(config.auth.argon2.pepper + password, config.auth.argon2);

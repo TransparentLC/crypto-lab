@@ -9,10 +9,10 @@ import StreamZip from 'node-stream-zip';
 import parseArgsStringToArgv from 'string-argv';
 import wretch from 'wretch';
 
-import config from './config.js';
-import db from './database.js';
-import { experiments, submissions, users } from './schema.js';
-import { blobFromReadableStream, formdataFromRecord } from './util.js';
+import config from './config';
+import db from './database';
+import { experiments, submissions, users } from './schema';
+import { blobFromReadableStream, formdataFromRecord } from './util';
 
 const procLimit = 64;
 const stderrLimit = 4096;

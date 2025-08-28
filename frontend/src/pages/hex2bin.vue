@@ -21,7 +21,7 @@ import { mdiSwapHorizontal } from '@mdi/js';
 import { useThemeVars } from 'naive-ui';
 import { ref } from 'vue';
 import NMdi from '../components/mdi.vue';
-import { isMobile } from '../store.js';
+import { isMobile } from '../store';
 
 const themeVars = useThemeVars();
 

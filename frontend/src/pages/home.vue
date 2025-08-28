@@ -19,8 +19,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import NMarked from '../components/marked.js';
-import http from '../request.js';
+import NMarked from '../components/marked';
+import http from '../request';
 
 const homepage = ref('');
 const loading = ref(true);

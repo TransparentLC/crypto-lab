@@ -114,8 +114,8 @@ import {
     mdiMenu,
     mdiTools,
 } from '@mdi/js';
-import http, { type ApiExperimentList } from './request.js';
-import store, { isMobile, tokenPayload } from './store.js';
+import http, { type ApiExperimentList } from './request';
+import store, { isMobile, tokenPayload } from './store';
 
 const route = useRoute();
 const router = useRouter();

@@ -6,16 +6,16 @@ import { and, eq, lte } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import config from '../config.js';
-import db from '../database.js';
+import config from '../config';
+import db from '../database';
 import {
     jwt,
     jwtOptional,
     jwtQuery,
     rateLimiter,
     validator,
-} from '../middlewares.js';
-import { experiments, reports } from '../schema.js';
+} from '../middlewares';
+import { experiments, reports } from '../schema';
 
 const app = new Hono<HonoSchema>();
 

@@ -1,6 +1,6 @@
 import wretch from 'wretch';
 import wretchQueryStringAddon from 'wretch/addons/queryString';
-import store, { tokenValidity } from './store.js';
+import store, { tokenValidity } from './store';
 
 export default wretch('api')
     .addon(wretchQueryStringAddon)

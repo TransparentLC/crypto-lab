@@ -1,9 +1,9 @@
 import readline from 'node:readline';
-import { passwordHash, passwordVerify } from '../src/util.js';
+import { passwordHash, passwordVerify } from '../src/util';
 
 let password = process.argv[2];
 if (!password) {
-    const rl =  readline.promises.createInterface({
+    const rl = readline.promises.createInterface({
         input: process.stdin,
         output: process.stdout,
     });

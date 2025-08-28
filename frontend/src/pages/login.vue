@@ -126,8 +126,8 @@ import { NText, useThemeVars } from 'naive-ui';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import VueTurnstile from 'vue-turnstile';
-import http, { type ApiLogin, type ApiResetPassword } from '../request.js';
-import store from '../store.js';
+import http, { type ApiLogin, type ApiResetPassword } from '../request';
+import store from '../store';
 
 const router = useRouter();
 const themeVars = useThemeVars();

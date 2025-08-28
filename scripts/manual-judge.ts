@@ -9,10 +9,10 @@ import StreamZip from 'node-stream-zip';
 import parseArgsStringToArgv from 'string-argv';
 import wretch from 'wretch';
 
-import config from '../src/config.js';
-import db from '../src/database.js';
-import { experiments, submissions } from '../src/schema.js';
-import { blobFromReadableStream, formdataFromRecord } from '../src/util.js';
+import config from '../src/config';
+import db from '../src/database';
+import { experiments, submissions } from '../src/schema';
+import { blobFromReadableStream, formdataFromRecord } from '../src/util';
 
 // 手动运行评测，结果不写入数据库
 // 流程和自动评测基本相同

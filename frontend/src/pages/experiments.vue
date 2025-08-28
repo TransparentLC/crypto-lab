@@ -431,14 +431,14 @@ import {
 import { computed, h, onMounted, reactive, ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import LanguageTag from '../components/language-tag.vue';
-import NMarked from '../components/marked.js';
+import NMarked from '../components/marked';
 import NMdi from '../components/mdi.vue';
-import formatSize from '../format-size.js';
+import formatSize from '../format-size';
 import http, {
     type ApiExperiment,
     type ApiExperimentSubmissions,
-} from '../request.js';
-import store, { isMobile, now, tokenPayload } from '../store.js';
+} from '../request';
+import store, { isMobile, now, tokenPayload } from '../store';
 
 const route = useRoute();
 

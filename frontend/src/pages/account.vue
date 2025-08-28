@@ -80,8 +80,8 @@
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-import http from '../request.js';
-import store from '../store.js';
+import http from '../request';
+import store from '../store';
 
 const router = useRouter();
 
