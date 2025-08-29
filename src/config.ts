@@ -58,6 +58,11 @@ type Config = {
         };
         logo: string;
     };
+    mail: {
+        host: string;
+        username: string;
+        password: string;
+    };
 };
 
 const deepFreeze = <T extends object>(obj: T) => {

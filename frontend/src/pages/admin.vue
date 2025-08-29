@@ -318,28 +318,58 @@ const updateUserData = (page: number = 1) =>
 onMounted(() => updateUserData());
 
 const getPasswordResetToken = async (user: ApiAdminUsers['rows'][number]) => {
-    const r = await http
-        .post(null, `/admin/users/${user.uid}/password-reset-token`)
-        .json<ApiAdminUserPasswordResetToken>();
-    window.chiya.dialog.create({
+    let email = '';
+    const d = window.chiya.dialog.create({
         title: `重设密码 #${user.uid}`,
-        content: () => [
-            `已为用户 #${user.uid} 生成重设密码令牌（点击复制）：`,
-            h(NCode, {
-                code: r.token,
-                wordWrap: true,
-                onClick: () =>
-                    navigator.clipboard
-                        .writeText(r.token)
-                        .then(() => window.chiya.message.success('已复制令牌')),
-                style: { cursor: 'pointer' },
+        content: () =>
+            h(NInput, {
+                placeholder: '将重设密码令牌发送到邮箱（可选）',
+                defaultValue: email,
+                'onUpdate:value': (e: string) => {
+                    email = e;
+                },
             }),
-            '令牌可以在 ',
-            h(NTime, { time: new Date(r.expire) }),
-            ' 前使用一次，使用后之前生成的令牌将会作废。',
-        ],
-        positiveText: '确认',
-        maskClosable: false,
+        positiveText: '确定',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+            d.loading = true;
+            const r = await http
+                .post(
+                    { email: email || null },
+                    `/admin/users/${user.uid}/password-reset-token`,
+                )
+                .json<ApiAdminUserPasswordResetToken>();
+            window.chiya.dialog.create({
+                title: `重设密码 #${user.uid}`,
+                content: () => [
+                    ...(email
+                        ? [
+                              `已为用户 #${user.uid} 生成重设密码令牌（点击复制）并发送到 `,
+                              h(NText, { code: true }, () => email),
+                              `：`,
+                          ]
+                        : [
+                              `已为用户 #${user.uid} 生成重设密码令牌（点击复制）：`,
+                          ]),
+                    h(NCode, {
+                        code: r.token,
+                        wordWrap: true,
+                        onClick: () =>
+                            navigator.clipboard
+                                .writeText(r.token)
+                                .then(() =>
+                                    window.chiya.message.success('已复制令牌'),
+                                ),
+                        style: { cursor: 'pointer' },
+                    }),
+                    '令牌可以在 ',
+                    h(NTime, { time: new Date(r.expire) }),
+                    ' 前使用一次，使用后之前生成的令牌将会作废。',
+                ],
+                positiveText: '确认',
+                maskClosable: false,
+            });
+        },
     });
 };
 const changeUsername = (user: ApiAdminUsers['rows'][number]) => {

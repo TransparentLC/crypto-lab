@@ -8,6 +8,7 @@ import { and, asc, count, desc, eq, not, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import yaml from 'js-yaml';
 import StreamZip from 'node-stream-zip';
+import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import config from '../config';
 import db from '../database';
@@ -15,6 +16,16 @@ import { ensureAdmin, jwt, jwtQuery, validator } from '../middlewares';
 import { judgeRightNow } from '../sandbox';
 import { experiments, reports, submissions, users } from '../schema';
 import { passwordGenerate, passwordHash } from '../util';
+
+const transporter = nodemailer.createTransport({
+    host: config.mail.host,
+    port: 465,
+    secure: true,
+    auth: {
+        user: config.mail.username,
+        pass: config.mail.password,
+    },
+});
 
 const app = new Hono<HonoSchema>();
 
@@ -99,7 +110,16 @@ app.post(
     '/admin/users/:uid{\\d+}/password-reset-token',
     jwt,
     ensureAdmin,
+    validator(
+        'json',
+        z
+            .object({
+                email: z.nullable(z.email().optional()),
+            })
+            .optional(),
+    ),
     async ctx => {
+        const body = ctx.req.valid('json');
         const row = db
             .select({
                 uid: users.uid,
@@ -123,10 +143,19 @@ app.post(
             } as ResetPasswordPayload),
             'utf-8',
         );
+        const token = Buffer.concat([iv, cipher.update(payload)]).toString(
+            'base64url',
+        );
+        if (body?.email) {
+            await transporter.sendMail({
+                from: `Crypto Lab <${config.mail.username}>`,
+                to: body.email,
+                subject: '[现代密码学实验] 重设密码令牌',
+                html: `<p>你的重设密码令牌是：</p><pre style="white-space:pre-wrap;word-break:break-all"><code>${token}</code></pre><p>在登录界面选择“忘记密码”，输入令牌即可重设密码。</p><p>令牌可以在 ${new Date(expire).toISOString()} 前使用一次，使用后之前生成的令牌将会作废。</p>`,
+            });
+        }
         return ctx.json({
-            token: Buffer.concat([iv, cipher.update(payload)]).toString(
-                'base64url',
-            ),
+            token,
             expire: new Date(expire).toISOString(),
         });
     },

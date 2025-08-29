@@ -53,6 +53,7 @@ sandbox:
   token: xxxxxxxx
   # 每隔一段时间检查是否有未评测的提交
   checkInterval: 30
+# 主题
 theme:
   # Naive UI的主题色
   color:
@@ -62,3 +63,8 @@ theme:
     suppl: '#f8a'
   # 左上角的LOGO
   logo: logo/origin.svg
+# 邮件（目前仅用于发送重设密码令牌）
+mail:
+  host: smtp.example.com
+  username: noreply@example.com
+  password: xxxxxxxx
