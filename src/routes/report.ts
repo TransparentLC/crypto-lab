@@ -9,6 +9,7 @@ import { z } from 'zod';
 import config from '../config';
 import db from '../database';
 import {
+    etag,
     jwt,
     jwtOptional,
     jwtQuery,
@@ -99,6 +100,7 @@ app.get(
     '/experiments/:expid{\\d+}/reports',
     jwtOptional,
     jwtQuery,
+    etag(),
     async ctx => {
         const row = db
             .select({ reportPath: reports.reportPath })

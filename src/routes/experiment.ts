@@ -8,13 +8,13 @@ import { z } from 'zod';
 
 import config from '../config';
 import db from '../database';
-import { jwt, jwtOptional, rateLimiter, validator } from '../middlewares';
+import { etag, jwt, jwtOptional, rateLimiter, validator } from '../middlewares';
 import { judgeRightNow } from '../sandbox';
 import { experiments, reports, submissions, users } from '../schema';
 
 const app = new Hono<HonoSchema>();
 
-app.get('/experiments', async ctx => {
+app.get('/experiments', etag(), async ctx => {
     const rows = db
         .select({
             expid: experiments.expid,
@@ -26,7 +26,7 @@ app.get('/experiments', async ctx => {
     return ctx.json(rows);
 });
 
-app.get('/experiments/:expid{\\d+}', jwtOptional, async ctx => {
+app.get('/experiments/:expid{\\d+}', jwtOptional, etag(), async ctx => {
     const row = db
         .select({
             title: experiments.title,
@@ -223,6 +223,7 @@ app.get(
             accepted: z.stringbool().optional().default(false),
         }),
     ),
+    etag(),
     async ctx => {
         const query = ctx.req.valid('query');
         // biome-ignore lint/style/noNonNullAssertion: count 必定存在

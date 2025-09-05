@@ -7,7 +7,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { mimes } from 'hono/utils/mime';
 
 import config from './config';
-import { logger } from './middlewares';
+import { etag, logger } from './middlewares';
 import apiRoutes from './routes';
 import { judgeLoop } from './sandbox';
 
@@ -33,7 +33,7 @@ app.use(logger)
         return ctx.json({ error: err.message }, statusCode);
     })
     .route('/api', apiRoutes)
-    .use(serveStatic({ root: './public' }));
+    .use(etag(), serveStatic({ root: './public' }));
 
 if (
     typeof config.server.port === 'string' &&

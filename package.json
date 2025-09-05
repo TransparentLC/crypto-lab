@@ -18,6 +18,7 @@
         "@hono/zod-validator": "^0.7.2",
         "@napi-rs/blake-hash": "^1.3.5",
         "@node-rs/argon2": "^2.0.2",
+        "@node-rs/xxhash": "^1.7.6",
         "adm-zip": "^0.5.16",
         "better-sqlite3": "^12.2.0",
         "csv-stringify": "^6.6.0",

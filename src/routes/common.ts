@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 import config from '../config';
 import db from '../database';
-import { jwt, validator } from '../middlewares';
+import { etag, jwt, validator } from '../middlewares';
 import { type CongratsEvent, eventEmitter, type JudgeEvent } from '../sandbox';
 import { submissions, users } from '../schema';
 import { passwordGenerate, passwordHash, passwordVerify } from '../util';
@@ -311,7 +311,7 @@ app.get(
         ),
 );
 
-app.get('/statistics', async ctx => {
+app.get('/statistics', etag(), async ctx => {
     const before = new Date(Date.now() + 3600 * 1000);
     before.setMinutes(0, 0, 0);
     const after = new Date(before.getTime() - 86400 * 7 * 1000);

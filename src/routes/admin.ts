@@ -12,7 +12,7 @@ import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import config from '../config';
 import db from '../database';
-import { ensureAdmin, jwt, jwtQuery, validator } from '../middlewares';
+import { ensureAdmin, etag, jwt, jwtQuery, validator } from '../middlewares';
 import { judgeRightNow } from '../sandbox';
 import { experiments, reports, submissions, users } from '../schema';
 import { passwordGenerate, passwordHash } from '../util';
@@ -33,6 +33,7 @@ app.get(
     '/admin/users',
     jwt,
     ensureAdmin,
+    etag(),
     validator(
         'query',
         z.object({
@@ -185,7 +186,7 @@ app.post('/admin/experiments', jwt, ensureAdmin, async ctx => {
     return ctx.body(null, 204);
 });
 
-app.get('/admin/experiments', jwt, ensureAdmin, async ctx => {
+app.get('/admin/experiments', jwt, ensureAdmin, etag(), async ctx => {
     const rows = db
         .select({
             expid: experiments.expid,
@@ -196,28 +197,34 @@ app.get('/admin/experiments', jwt, ensureAdmin, async ctx => {
     return ctx.json(rows);
 });
 
-app.get('/admin/experiments/:expid{\\d+}', jwt, ensureAdmin, async ctx => {
-    const row = db
-        .select({
-            title: experiments.title,
-            description: experiments.description,
-            reportSubmission: experiments.reportSubmission,
-            cpuLimit: experiments.cpuLimit,
-            compileTimeLimit: experiments.compileTimeLimit,
-            compileMemoryLimit: experiments.compileMemoryLimit,
-            runTimeLimit: experiments.runTimeLimit,
-            runMemoryLimit: experiments.runMemoryLimit,
-            startTime: experiments.startTime,
-            endTime: experiments.endTime,
-            compileCommands: experiments.compileCommands,
-            checkpointPath: experiments.checkpointPath,
-        })
-        .from(experiments)
-        .where(eq(experiments.expid, Number(ctx.req.param('expid'))))
-        .get();
-    if (!row) return ctx.body(null, 404);
-    return ctx.json(row);
-});
+app.get(
+    '/admin/experiments/:expid{\\d+}',
+    jwt,
+    ensureAdmin,
+    etag(),
+    async ctx => {
+        const row = db
+            .select({
+                title: experiments.title,
+                description: experiments.description,
+                reportSubmission: experiments.reportSubmission,
+                cpuLimit: experiments.cpuLimit,
+                compileTimeLimit: experiments.compileTimeLimit,
+                compileMemoryLimit: experiments.compileMemoryLimit,
+                runTimeLimit: experiments.runTimeLimit,
+                runMemoryLimit: experiments.runMemoryLimit,
+                startTime: experiments.startTime,
+                endTime: experiments.endTime,
+                compileCommands: experiments.compileCommands,
+                checkpointPath: experiments.checkpointPath,
+            })
+            .from(experiments)
+            .where(eq(experiments.expid, Number(ctx.req.param('expid'))))
+            .get();
+        if (!row) return ctx.body(null, 404);
+        return ctx.json(row);
+    },
+);
 
 app.patch(
     '/admin/experiments/:expid{\\d+}',
@@ -289,6 +296,7 @@ app.get(
     '/admin/experiments/:expid{\\d+}/submissions',
     jwtQuery,
     ensureAdmin,
+    etag(),
     async ctx => {
         const experiment = db
             .select({
@@ -388,6 +396,7 @@ app.get(
     '/admin/experiments/:expid{\\d+}/reports',
     jwtQuery,
     ensureAdmin,
+    etag(),
     async ctx => {
         const subquery = db
             .select({

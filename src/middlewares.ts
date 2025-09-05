@@ -1,5 +1,7 @@
 import { zValidator } from '@hono/zod-validator';
+import { xxh3 } from '@node-rs/xxhash';
 import type { MiddlewareHandler } from 'hono';
+import { etag as honoEtag } from 'hono/etag';
 import { jwt as honoJwt, verify } from 'hono/jwt';
 import { rateLimiter as honoRateLimiter } from 'hono-rate-limiter';
 import { fromError } from 'zod-validation-error';
@@ -78,4 +80,17 @@ export const rateLimiter: typeof honoRateLimiter = config =>
         standardHeaders: 'draft-7',
         message: { error: 'Too many requests, please try again later.' },
         ...config,
+    });
+
+export const etag: typeof honoEtag = (options = {}) =>
+    honoEtag({
+        generateDigest: body => {
+            const h = xxh3.xxh128(body, 0x0d00072100114514n);
+            const r = new Uint8Array(16);
+            const dv = new DataView(r.buffer);
+            dv.setBigUint64(8, h);
+            dv.setBigUint64(0, h >> 64n);
+            return r.buffer;
+        },
+        ...options,
     });
