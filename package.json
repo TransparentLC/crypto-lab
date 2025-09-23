@@ -14,38 +14,38 @@
         "unarchive": "rm -rf public && 7z x -y crypto-lab.7z"
     },
     "dependencies": {
-        "@hono/node-server": "^1.19.1",
-        "@hono/zod-validator": "^0.7.2",
+        "@hono/node-server": "^1.19.4",
+        "@hono/zod-validator": "^0.7.3",
         "@napi-rs/blake-hash": "^1.3.5",
         "@node-rs/argon2": "^2.0.2",
         "@node-rs/xxhash": "^1.7.6",
         "adm-zip": "^0.5.16",
-        "better-sqlite3": "^12.2.0",
+        "better-sqlite3": "^12.4.1",
         "csv-stringify": "^6.6.0",
         "drizzle-orm": "^0.44.5",
         "exit-hook": "^4.0.0",
-        "hono": "^4.9.6",
+        "hono": "^4.9.8",
         "hono-rate-limiter": "^0.4.2",
         "js-yaml": "^4.1.0",
         "node-stream-zip": "^1.15.0",
         "nodemailer": "^7.0.6",
         "string-argv": "^0.3.2",
         "wretch": "^2.11.0",
-        "zod": "^4.1.5",
-        "zod-validation-error": "^4.0.1"
+        "zod": "^4.1.11",
+        "zod-validation-error": "^4.0.2"
     },
     "devDependencies": {
-        "@biomejs/biome": "^2.2.2",
+        "@biomejs/biome": "^2.2.4",
         "@commitlint/cli": "^19.8.1",
         "@commitlint/config-conventional": "^19.8.1",
         "@types/adm-zip": "^0.5.7",
         "@types/better-sqlite3": "^7.6.13",
         "@types/js-yaml": "^4.0.9",
-        "@types/node": "^24.3.1",
+        "@types/node": "^24.5.2",
         "@types/nodemailer": "^7.0.1",
         "drizzle-kit": "^0.31.4",
-        "esbuild": "^0.25.9",
-        "lefthook": "^1.12.3",
+        "esbuild": "^0.25.10",
+        "lefthook": "^1.13.3",
         "tsx": "^4.20.5"
     }
 }
