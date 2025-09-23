@@ -78,7 +78,13 @@ export const validator: typeof zValidator = (target, schema, hook) =>
 export const rateLimiter: typeof honoRateLimiter = config =>
     honoRateLimiter({
         standardHeaders: 'draft-7',
-        message: { error: 'Too many requests, please try again later.' },
+        message: ctx => {
+            // biome-ignore lint/style/noNonNullAssertion: explanation
+            const after = parseInt(ctx.res.headers.get('Retry-After')!, 10);
+            return {
+                error: `Too many requests, please try again later after ${after < 60 ? `${after} seconds` : `${Math.round(after / 60)} minutes`}.`,
+            };
+        },
         ...config,
     });
 
