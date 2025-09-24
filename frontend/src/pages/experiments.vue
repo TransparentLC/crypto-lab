@@ -174,6 +174,64 @@
             </n-tab-pane>
             <n-tab-pane name="submissionHistory" tab="提交记录">
                 <n-space vertical>
+                    <n-grid :cols="isMobile ? 2 : 5">
+                        <n-gi>
+                            <n-statistic label="提交次数">
+                                <n-tooltip trigger="hover" placement="bottom">
+                                    <template #trigger>{{ submissionDataStatistic.count }}</template>
+                                    <n-grid x-gap="8" y-gap="4" :cols="2" style="grid-template-columns:auto auto">
+                                        <template v-for="[k, v] in Object.entries(submissionDataStatistic.language).sort(([_0, v0], [_1, v1]) => v1.count - v0.count)">
+                                            <n-gi><language-tag :language="k"></language-tag></n-gi>
+                                            <n-gi><n-flex align="center" style="height:100%">{{ `${v.accepted} / ${v.count} (${Math.round(v.accepted / v.count * 100) / 100}%)` }}</n-flex></n-gi>
+                                        </template>
+                                    </n-grid>
+                                </n-tooltip>
+                            </n-statistic>
+                        </n-gi>
+                        <n-gi>
+                            <n-statistic label="通过次数" :value="submissionDataStatistic.accepted" />
+                        </n-gi>
+                        <n-gi>
+                            <n-statistic label="平均运行时间">
+                                <n-tooltip trigger="hover" placement="bottom">
+                                    <template #trigger>{{ Math.round(submissionDataStatistic.averageTime * 1000) / 1000 }} ms</template>
+                                    <n-grid x-gap="8" y-gap="4" :cols="2" style="grid-template-columns:auto auto">
+                                        <template v-for="[k, v] in Object.entries(submissionDataStatistic.language).filter(([_, v]) => v.averageTime).sort(([_0, v0], [_1, v1]) => v0.averageTime - v1.averageTime)">
+                                            <n-gi><language-tag :language="k"></language-tag></n-gi>
+                                            <n-gi><n-flex align="center" style="height:100%">{{ `${Math.round(v.averageTime * 1000) / 1000} ms` }}</n-flex></n-gi>
+                                        </template>
+                                    </n-grid>
+                                </n-tooltip>
+                            </n-statistic>
+                        </n-gi>
+                        <n-gi>
+                            <n-statistic label="平均运行内存">
+                                <n-tooltip trigger="hover" placement="bottom">
+                                    <template #trigger>{{ formatSize(submissionDataStatistic.averageMemory) }}</template>
+                                    <n-grid x-gap="8" y-gap="4" :cols="2" style="grid-template-columns:auto auto">
+                                        <template v-for="[k, v] in Object.entries(submissionDataStatistic.language).filter(([_, v]) => v.averageMemory).sort(([_0, v0], [_1, v1]) => v0.averageMemory - v1.averageMemory)">
+                                            <n-gi><language-tag :language="k"></language-tag></n-gi>
+                                            <n-gi><n-flex align="center" style="height:100%">{{ formatSize(v.averageMemory) }}</n-flex></n-gi>
+                                        </template>
+                                    </n-grid>
+                                </n-tooltip>
+                            </n-statistic>
+                        </n-gi>
+                        <n-gi v-if="!isMobile">
+                            <n-statistic label="平均代码长度">
+                                <n-tooltip trigger="hover" placement="bottom">
+                                    <template #trigger>{{ Math.round(submissionDataStatistic.averageLength) }}</template>
+                                    <n-grid x-gap="8" y-gap="4" :cols="2" style="grid-template-columns:auto auto">
+                                        <template v-for="[k, v] in Object.entries(submissionDataStatistic.language).filter(([_, v]) => v.averageLength).sort(([_0, v0], [_1, v1]) => v0.averageLength - v1.averageLength)">
+                                            <n-gi><language-tag :language="k"></language-tag></n-gi>
+                                            <n-gi><n-flex align="center" style="height:100%">{{ Math.round(v.averageLength) }}</n-flex></n-gi>
+                                        </template>
+                                    </n-grid>
+                                </n-tooltip>
+                            </n-statistic>
+                        </n-gi>
+                    </n-grid>
+                    <n-divider style="margin:0"></n-divider>
                     <div style="width:100%;overflow-x:auto">
                         <n-table>
                             <n-thead>
@@ -550,6 +608,16 @@ const submissionData = reactive<
     })[]
 >([]);
 const submissionDataSpecial = reactive<ApiExperimentSubmissions['special']>({});
+const submissionDataStatistic = reactive<ApiExperimentSubmissions['statistic']>(
+    {
+        count: 0,
+        language: {},
+        accepted: 0,
+        averageTime: 0,
+        averageMemory: 0,
+        averageLength: 0,
+    },
+);
 const submissionDataSelf = ref(false);
 const submissionDataAccepted = ref(false);
 const updateSubmissionDataLoading = ref(false);
@@ -573,6 +641,7 @@ const updateSubmissionData = async (
         );
         submissionPageCount.value = r.pages;
         Object.assign(submissionDataSpecial, r.special);
+        Object.assign(submissionDataStatistic, r.statistic);
     } catch {
     } finally {
         updateSubmissionDataLoading.value = false;

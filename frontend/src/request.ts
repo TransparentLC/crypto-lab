@@ -200,6 +200,23 @@ export type ApiExperimentSubmissions = {
         silver?: ApiExperimentSubmissionsRow;
         bronze?: ApiExperimentSubmissionsRow;
     };
+    statistic: {
+        count: number;
+        accepted: number;
+        averageTime: number;
+        averageMemory: number;
+        averageLength: number;
+        language: Record<
+            string,
+            {
+                count: number;
+                accepted: number;
+                averageTime: number;
+                averageMemory: number;
+                averageLength: number;
+            }
+        >;
+    };
 };
 
 export type ApiStatistics = {

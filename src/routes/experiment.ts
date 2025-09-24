@@ -1,7 +1,19 @@
 import path from 'node:path';
 import { Blake3Hasher } from '@napi-rs/blake-hash';
 import AdmZip from 'adm-zip';
-import { and, asc, count, desc, eq, lte, min, not, sql } from 'drizzle-orm';
+import {
+    and,
+    asc,
+    avg,
+    count,
+    desc,
+    eq,
+    lte,
+    min,
+    not,
+    sql,
+    sum,
+} from 'drizzle-orm';
 import { Hono } from 'hono';
 import yaml from 'js-yaml';
 import { z } from 'zod';
@@ -359,11 +371,118 @@ app.get(
         special.silver = rowsBestAccepted[1];
         special.bronze = rowsBestAccepted[2];
 
+        const statistic: {
+            count: number;
+            accepted: number;
+            averageTime: number;
+            averageMemory: number;
+            averageLength: number;
+            language: Record<
+                string,
+                {
+                    count: number;
+                    accepted: number;
+                    averageTime: number;
+                    averageMemory: number;
+                    averageLength: number;
+                }
+            >;
+        } = Object.assign(
+            // biome-ignore lint/style/noNonNullAssertion: explanation
+            db
+                .select({
+                    count: count(),
+                })
+                .from(submissions)
+                .where(
+                    and(
+                        not(submissions.obsolete),
+                        eq(submissions.expid, Number(ctx.req.param('expid'))),
+                    ),
+                )
+                .get()!,
+            // biome-ignore lint/style/noNonNullAssertion: explanation
+            db
+                .select({
+                    accepted: count(),
+                    averageTime: avg(submissions.time).mapWith(Number),
+                    averageMemory: avg(submissions.memory).mapWith(Number),
+                    averageLength: avg(
+                        sql`length(${submissions.code})`,
+                    ).mapWith(Number),
+                })
+                .from(submissions)
+                .where(
+                    and(
+                        not(submissions.obsolete),
+                        eq(submissions.expid, Number(ctx.req.param('expid'))),
+                        submissions.accepted,
+                    ),
+                )
+                .get()!,
+            {
+                language: Object.fromEntries(
+                    db
+                        .select({
+                            language: submissions.language,
+                            count: count(),
+                            accepted: sum(
+                                sql`case when ${submissions.accepted} then 1 else 0 end`,
+                            ).mapWith(Number),
+                            averageTime:
+                                sql`ifnull(avg(case when ${submissions.accepted} then ${submissions.time} else ${null} end), 0)`.mapWith(
+                                    Number,
+                                ),
+                            averageMemory:
+                                sql`ifnull(avg(case when ${submissions.accepted} then ${submissions.memory} else ${null} end), 0)`.mapWith(
+                                    Number,
+                                ),
+                            averageLength:
+                                sql`ifnull(avg(case when ${submissions.accepted} then length(${submissions.code}) else ${null} end), 0)`.mapWith(
+                                    Number,
+                                ),
+                        })
+                        .from(submissions)
+                        .where(
+                            and(
+                                not(submissions.obsolete),
+                                eq(
+                                    submissions.expid,
+                                    Number(ctx.req.param('expid')),
+                                ),
+                            ),
+                        )
+                        .groupBy(submissions.language)
+                        .all()
+                        .map(
+                            ({
+                                language,
+                                count,
+                                accepted,
+                                averageTime,
+                                averageMemory,
+                                averageLength,
+                            }) => [
+                                language,
+                                {
+                                    count,
+                                    accepted,
+                                    averageTime,
+                                    averageMemory,
+                                    averageLength,
+                                },
+                            ],
+                        ),
+                ),
+            },
+        );
+
         return ctx.json({
             count: rowCount,
             pages: Math.ceil(rowCount / 20),
             rows,
             special,
+            statistic,
         });
     },
 );
