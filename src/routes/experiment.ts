@@ -405,11 +405,18 @@ app.get(
             db
                 .select({
                     accepted: count(),
-                    averageTime: avg(submissions.time).mapWith(Number),
-                    averageMemory: avg(submissions.memory).mapWith(Number),
-                    averageLength: avg(
-                        sql`length(${submissions.code})`,
-                    ).mapWith(Number),
+                    averageTime:
+                        sql`ifnull(avg(${submissions.time}), 0)`.mapWith(
+                            Number,
+                        ),
+                    averageMemory:
+                        sql`ifnull(avg(${submissions.memory}), 0)`.mapWith(
+                            Number,
+                        ),
+                    averageLength:
+                        sql`ifnull(avg(length(${submissions.code})), 0)`.mapWith(
+                            Number,
+                        ),
                 })
                 .from(submissions)
                 .where(
