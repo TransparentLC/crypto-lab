@@ -182,7 +182,7 @@
                                     <n-grid x-gap="8" y-gap="4" :cols="2" style="grid-template-columns:auto auto">
                                         <template v-for="[k, v] in Object.entries(submissionDataStatistic.language).sort(([_0, v0], [_1, v1]) => v1.count - v0.count)">
                                             <n-gi><language-tag :language="k"></language-tag></n-gi>
-                                            <n-gi><n-flex align="center" style="height:100%">{{ `${v.accepted} / ${v.count} (${Math.round(v.accepted / v.count * 100) / 100}%)` }}</n-flex></n-gi>
+                                            <n-gi><n-flex align="center" style="height:100%">{{ `${v.accepted} / ${v.count} (${Math.round(v.accepted / v.count * 10000) / 100}%)` }}</n-flex></n-gi>
                                         </template>
                                     </n-grid>
                                 </n-tooltip>
