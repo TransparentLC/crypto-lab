@@ -24,7 +24,7 @@
         "csv-stringify": "^6.6.0",
         "drizzle-orm": "^0.44.5",
         "exit-hook": "^4.0.0",
-        "hono": "^4.9.8",
+        "hono": "^4.9.9",
         "hono-rate-limiter": "^0.4.2",
         "js-yaml": "^4.1.0",
         "node-stream-zip": "^1.15.0",
@@ -36,16 +36,16 @@
     },
     "devDependencies": {
         "@biomejs/biome": "^2.2.4",
-        "@commitlint/cli": "^19.8.1",
-        "@commitlint/config-conventional": "^19.8.1",
+        "@commitlint/cli": "^20.0.0",
+        "@commitlint/config-conventional": "^20.0.0",
         "@types/adm-zip": "^0.5.7",
         "@types/better-sqlite3": "^7.6.13",
         "@types/js-yaml": "^4.0.9",
         "@types/node": "^24.5.2",
         "@types/nodemailer": "^7.0.1",
-        "drizzle-kit": "^0.31.4",
+        "drizzle-kit": "^0.31.5",
         "esbuild": "^0.25.10",
         "lefthook": "^1.13.4",
-        "tsx": "^4.20.5"
+        "tsx": "^4.20.6"
     }
 }
