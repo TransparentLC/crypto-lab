@@ -473,6 +473,7 @@ import hljs from 'highlight.js/lib/core';
 import {
     NA,
     NCode,
+    NFlex,
     NH3,
     NLog,
     NSpace,
@@ -688,11 +689,30 @@ const showSubmissionResult = (
                     style: 'max-height:calc(100vh - 160px);overflow-y:auto',
                 },
                 () => [
-                    h('div', { style: 'display:flex;align-items:center' }, [
+                    h(NFlex, { align: 'center', size: 'small' }, () => [
                         h(NH3, { style: 'margin:0' }, () => '源代码'),
                         h('div', { style: 'flex-grow:1' }),
                         ...(submission.code !== null
                             ? [
+                                  h(
+                                      NA,
+                                      {
+                                          href: '',
+                                          onClick: (e: MouseEvent) => {
+                                              e.preventDefault();
+                                              navigator.clipboard
+                                                  // biome-ignore lint/style/noNonNullAssertion: explanation
+                                                  .writeText(submission.code!)
+                                                  .then(() =>
+                                                      window.chiya.message.success(
+                                                          '已复制代码',
+                                                      ),
+                                                  );
+                                          },
+                                      },
+                                      () => '复制',
+                                  ),
+                                  h('', ' '),
                                   h(
                                       NA,
                                       {
