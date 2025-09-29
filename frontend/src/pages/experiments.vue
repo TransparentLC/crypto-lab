@@ -712,7 +712,6 @@ const showSubmissionResult = (
                                       },
                                       () => '复制',
                                   ),
-                                  h('', ' '),
                                   h(
                                       NA,
                                       {
