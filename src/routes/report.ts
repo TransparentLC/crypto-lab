@@ -56,7 +56,10 @@ app.post(
             )
             .get();
         if (!experimentRow) return ctx.json(null, 404);
-        if (new Date(experimentRow.endTime) < now)
+        if (
+            !config.allowLateSubmission &&
+            new Date(experimentRow.endTime) < now
+        )
             return ctx.json({ error: '实验已截止' }, 400);
 
         const filename = crypto.randomUUID();

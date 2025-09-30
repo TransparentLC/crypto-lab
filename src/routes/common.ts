@@ -33,6 +33,7 @@ app.get('/site-config', async ctx =>
         tokenRefresh: config.auth.jwt.refresh,
         sizeLimit: config.sizeLimit,
         theme: config.theme,
+        allowLateSubmission: config.allowLateSubmission,
     }),
 );
 

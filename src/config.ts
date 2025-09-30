@@ -63,6 +63,7 @@ type Config = {
         username: string;
         password: string;
     };
+    allowLateSubmission: boolean;
 };
 
 const deepFreeze = <T extends object>(obj: T) => {

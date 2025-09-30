@@ -96,6 +96,7 @@ export type ApiSiteConfig = {
         };
         logo: string;
     };
+    allowLateSubmission: boolean;
 };
 
 export type ApiAdminUsers = {

@@ -26,6 +26,7 @@ const store = reactive({
             },
             logo: '',
         },
+        allowLateSubmission: false,
     },
 });
 

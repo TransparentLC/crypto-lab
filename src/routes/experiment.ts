@@ -4,7 +4,6 @@ import AdmZip from 'adm-zip';
 import {
     and,
     asc,
-    avg,
     count,
     desc,
     eq,
@@ -170,7 +169,10 @@ app.post(
             )
             .get();
         if (!experimentRow) return ctx.body(null, 404);
-        if (new Date(experimentRow.endTime) < now)
+        if (
+            !config.allowLateSubmission &&
+            new Date(experimentRow.endTime) < now
+        )
             return ctx.json({ error: '实验已截止' }, 400);
         if (!Object.keys(experimentRow.compileCommands).includes(body.language))
             return ctx.json(

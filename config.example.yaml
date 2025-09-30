@@ -68,3 +68,5 @@ mail:
   host: smtp.example.com
   username: noreply@example.com
   password: xxxxxxxx
+# 是否允许在实验截止后继续提交
+allowLateSubmission: false

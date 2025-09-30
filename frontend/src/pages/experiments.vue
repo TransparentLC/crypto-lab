@@ -96,7 +96,7 @@
                 <n-space vertical>
                     <template v-if="store.token">
                         <n-result
-                            v-if="experiment.endTime < now"
+                            v-if="!store.siteConfig.allowLateSubmission && experiment.endTime < now"
                             title="实验已截止"
                             :description="mataraOkinaTriggered ? 'BGM. もうドアには入れない' : '门再也进不去了'"
                             style="margin:2em"
@@ -377,7 +377,7 @@
                 <n-space vertical>
                     <template v-if="store.token">
                         <n-result
-                            v-if="experiment.endTime < now"
+                            v-if="!store.siteConfig.allowLateSubmission && experiment.endTime < now"
                             title="实验已截止"
                             :description="mataraOkinaTriggered ? 'BGM. もうドアには入れない' : '门再也进不去了'"
                             style="margin:2em"
@@ -552,6 +552,24 @@ onBeforeRouteUpdate(to => {
 
 const submitCodeFileList = ref<UploadFileInfo[]>([]);
 const submitCode = async (options: UploadCustomRequestOptions) => {
+    if (
+        experiment.endTime < now.value &&
+        !(await new Promise(resolve =>
+            window.chiya.dialog.create({
+                title: '实验已截止',
+                content:
+                    '实验已经截止了，你仍然可以提交代码并进行评测，但是这样可能会使你被判定为迟交了这个实验。是否继续？',
+                positiveText: '确定',
+                negativeText: '取消',
+                onPositiveClick: () => resolve(true),
+                onNegativeClick: () => resolve(false),
+                onMaskClick: () => resolve(null),
+            }),
+        ))
+    ) {
+        submitCodeFileList.value.length = 0;
+        return;
+    }
     const pt = Date.now();
     let ps = true;
     const pf = () => {
@@ -845,6 +863,24 @@ const showSubmissionResult = (
 
 const submitReportFileList = ref<UploadFileInfo[]>([]);
 const submitReport = async (options: UploadCustomRequestOptions) => {
+    if (
+        experiment.endTime < now.value &&
+        !(await new Promise(resolve =>
+            window.chiya.dialog.create({
+                title: '实验已截止',
+                content:
+                    '实验已经截止了，你仍然可以提交实验报告，但是这样可能会使你被判定为迟交了这个实验。是否继续？',
+                positiveText: '确定',
+                negativeText: '取消',
+                onPositiveClick: () => resolve(true),
+                onNegativeClick: () => resolve(false),
+                onMaskClick: () => resolve(null),
+            }),
+        ))
+    ) {
+        submitReportFileList.value.length = 0;
+        return;
+    }
     const pt = Date.now();
     let ps = true;
     const pf = () => {
