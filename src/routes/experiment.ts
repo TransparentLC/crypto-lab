@@ -241,6 +241,7 @@ app.get(
     async ctx => {
         const query = ctx.req.valid('query');
         // biome-ignore lint/style/noNonNullAssertion: count 必定存在
+        // biome-ignore lint/suspicious/noExtraNonNullAssertion: count 必定存在
         const rowCount = db
             .select({ count: count() })
             .from(submissions)
@@ -254,7 +255,7 @@ app.get(
                     ...(query.accepted ? [submissions.accepted] : []),
                 ),
             )
-            .get()?.count!;
+            .get()!.count!;
         const subqueryUsername = db
             .select({
                 uid: users.uid,

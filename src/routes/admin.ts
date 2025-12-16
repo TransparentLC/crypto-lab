@@ -44,8 +44,9 @@ app.get(
     async ctx => {
         const query = ctx.req.valid('query');
         // biome-ignore lint/style/noNonNullAssertion: count 必定存在
-        const rowCount = db.select({ count: count() }).from(users).get()
-            ?.count!;
+        // biome-ignore lint/suspicious/noExtraNonNullAssertion: count 必定存在
+        const rowCount = db.select({ count: count() }).from(users).get()!
+            .count!;
         const rows = db
             .select({
                 uid: users.uid,
@@ -273,11 +274,12 @@ app.post(
         const body = ctx.req.valid('form');
         const filename = crypto.randomUUID();
         // biome-ignore lint/style/noNonNullAssertion: checkpointPath 必定存在
+        // biome-ignore lint/suspicious/noExtraNonNullAssertion: checkpointPath 必定存在
         const filenameOld = db
             .select({ checkpointPath: experiments.checkpointPath })
             .from(experiments)
             .where(eq(experiments.expid, Number(ctx.req.param('expid'))))
-            .get()?.checkpointPath!;
+            .get()!.checkpointPath!;
         await stream.promises.pipeline(
             body.file.stream(),
             fs.createWriteStream(path.join('storage', filename)),

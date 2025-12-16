@@ -44,7 +44,8 @@ export const tokenPayload = computed(() =>
 
 export const tokenValidity = computed(() =>
     // biome-ignore lint/style/noNonNullAssertion: exp 必定存在
-    store.token ? tokenPayload.value?.exp! - Date.now() / 1000 : null,
+    // biome-ignore lint/suspicious/noExtraNonNullAssertion: exp 必定存在
+    store.token ? tokenPayload.value!.exp! - Date.now() / 1000 : null,
 );
 
 let notificationSSE: ReconnectingEventSource;

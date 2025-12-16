@@ -129,7 +129,8 @@ export const judge = async (
                 return result;
             }
             // biome-ignore lint/style/noNonNullAssertion: file ID 必定存在
-            execFileId = compileResponse.fileIds?.[execFile]!;
+            // biome-ignore lint/suspicious/noExtraNonNullAssertion: file ID 必定存在
+            execFileId = compileResponse.fileIds![execFile]!;
         }
 
         // Judge
@@ -191,14 +192,13 @@ export const judge = async (
                                             1e6,
                                     ),
                                     // 从stdout输出的数据大小也会被计入memoryLimit，输出较长的话会触发MemoryLimitExceeded
-                                    // biome-ignore-start lint/style/noNonNullAssertion: entry, size 必定存在
                                     memoryLimit:
                                         experiment.runMemoryLimit +
-                                        (
-                                            await checkpointZip.entry(
-                                                checkpoint.output,
-                                            )!
-                                        )?.size!,
+                                        // biome-ignore-start lint/style/noNonNullAssertion: entry, size 必定存在
+                                        // biome-ignore lint/suspicious/noExtraNonNullAssertion: entry, size 必定存在
+                                        (await checkpointZip.entry(
+                                            checkpoint.output,
+                                        ))!.size!,
                                     // biome-ignore-end lint/style/noNonNullAssertion: entry, size 必定存在
                                     copyIn: {
                                         [execFile]: { fileId: execFileId },
@@ -493,13 +493,14 @@ export const judgeLoop = async () => {
             .where(eq(submissions.subid, submission.subid))
             .run();
         // biome-ignore lint/style/noNonNullAssertion: title 必定存在
+        // biome-ignore lint/suspicious/noExtraNonNullAssertion: title 必定存在
         const title = db
             .select({
                 title: experiments.title,
             })
             .from(experiments)
             .where(eq(experiments.expid, submission.expid))
-            .get()?.title!;
+            .get()!.title!;
         eventEmitter.emit('judge', {
             expid: submission.expid,
             subid: submission.subid,
@@ -532,13 +533,14 @@ export const judgeLoop = async () => {
                 .get();
             if (!row) {
                 // biome-ignore lint/style/noNonNullAssertion: username 必定存在
+                // biome-ignore lint/suspicious/noExtraNonNullAssertion: username 必定存在
                 const username = db
                     .select({
                         username: users.username,
                     })
                     .from(users)
                     .where(eq(users.uid, submission.uid))
-                    .get()?.username!;
+                    .get()!.username!;
                 eventEmitter.emit('congrats', {
                     expid: submission.expid,
                     subid: submission.subid,

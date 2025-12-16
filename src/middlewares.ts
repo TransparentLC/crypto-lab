@@ -3,7 +3,10 @@ import { xxh3 } from '@node-rs/xxhash';
 import type { MiddlewareHandler } from 'hono';
 import { etag as honoEtag } from 'hono/etag';
 import { jwt as honoJwt, verify } from 'hono/jwt';
-import { rateLimiter as honoRateLimiter } from 'hono-rate-limiter';
+import {
+    rateLimiter as honoRateLimiter,
+    type RateLimitInfo,
+} from 'hono-rate-limiter';
 import { fromError } from 'zod-validation-error';
 
 import config from './config';
@@ -65,6 +68,7 @@ export const validator: typeof zValidator = (target, schema, hook) =>
     zValidator(
         target,
         schema,
+        // @ts-expect-error
         hook ||
             ((result, ctx) => {
                 if (!result.success)
@@ -76,11 +80,15 @@ export const validator: typeof zValidator = (target, schema, hook) =>
     );
 
 export const rateLimiter: typeof honoRateLimiter = config =>
-    honoRateLimiter({
+    // @ts-expect-error
+    honoRateLimiter<{ Variables: { rateLimit: RateLimitInfo } }>({
         standardHeaders: 'draft-7',
+        // @ts-expect-error
         message: ctx => {
+            // https://honohub.dev/docs/rate-limiter/configuration#context-properties
+            const { resetTime } = ctx.get('rateLimit');
             // biome-ignore lint/style/noNonNullAssertion: explanation
-            const after = parseInt(ctx.res.headers.get('Retry-After')!, 10);
+            const after = Math.ceil((resetTime!.getTime() - Date.now()) / 1000);
             return {
                 error: `Too many requests, please try again later after ${after < 60 ? `${after} seconds` : `${Math.round(after / 60)} minutes`}.`,
             };
