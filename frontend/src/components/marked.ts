@@ -1,7 +1,9 @@
+import { mdiContentCopy } from '@mdi/js';
 import { Marked, type MarkedToken } from 'marked';
 import {
     NA,
     NBlockquote,
+    NButton,
     NCode,
     NDivider,
     NEquation,
@@ -25,6 +27,7 @@ import {
     NUl,
 } from 'naive-ui';
 import { type FunctionalComponent, h, type VNode } from 'vue';
+import NMdi from './mdi.vue';
 
 const marked = new Marked();
 
@@ -179,7 +182,26 @@ const renderToken = (
         case 'del':
             return h(NText, { delete: true }, r(token.tokens as MarkedToken[]));
         case 'code':
-            return h(NP, () => [
+            return h(NP, { style: { position: 'relative' } }, () => [
+                h(
+                    NButton,
+                    {
+                        quaternary: true,
+                        circle: true,
+                        style: {
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                        },
+                        onClick: () =>
+                            navigator.clipboard
+                                .writeText(token.text)
+                                .then(() =>
+                                    window.chiya.message.success('已复制代码'),
+                                ),
+                    },
+                    { icon: () => h(NMdi, { icon: mdiContentCopy }) },
+                ),
                 h(NCode, {
                     code: token.text,
                     language: token.lang,
