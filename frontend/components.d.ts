@@ -53,6 +53,7 @@ declare module 'vue' {
     NTag: typeof import('naive-ui')['NTag']
     NTbody: typeof import('naive-ui')['NTbody']
     NTd: typeof import('naive-ui')['NTd']
+    NText: typeof import('naive-ui')['NText']
     NTh: typeof import('naive-ui')['NTh']
     NThead: typeof import('naive-ui')['NThead']
     NTime: typeof import('naive-ui')['NTime']

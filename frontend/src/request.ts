@@ -1,5 +1,6 @@
 import wretch from 'wretch';
 import wretchQueryStringAddon from 'wretch/addons/queryString';
+import { WretchError } from 'wretch/resolver';
 import store, { tokenValidity } from './store';
 
 export default wretch('api')
@@ -57,12 +58,20 @@ export default wretch('api')
         });
         throw err;
     })
-    .catcherFallback(err => {
-        (window.chiya?.message.error || alert)(
-            err.json?.error ||
-                err.message ||
-                `HTTP ${err.status} error on ${err.url}`,
-        );
+    .catcherFallback(async err => {
+        if (err instanceof WretchError) {
+            (window.chiya?.message.error || alert)(
+                (await err.response
+                    .json()
+                    .then(r => r.error)
+                    .catch(() => {})) ||
+                    `HTTP ${err.status} error on ${err.url}`,
+            );
+        } else if (err instanceof Error) {
+            (window.chiya?.message.error || alert)(
+                err.message || err.toString(),
+            );
+        }
         throw err;
     });
 
