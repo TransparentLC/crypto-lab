@@ -35,7 +35,7 @@ export const logger: MiddlewareHandler = async (ctx, next) => {
     );
 };
 
-export const jwt = honoJwt({ secret: config.auth.jwt.secret });
+export const jwt = honoJwt({ secret: config.auth.jwt.secret, alg: 'HS256' });
 
 export const jwtQuery: MiddlewareHandler = async (ctx, next) => {
     if (!ctx.get('jwtPayload')) {
