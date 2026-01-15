@@ -46,7 +46,10 @@ export const jwtQuery: MiddlewareHandler = async (ctx, next) => {
                 403,
             );
         try {
-            ctx.set('jwtPayload', await verify(token, config.auth.jwt.secret));
+            ctx.set(
+                'jwtPayload',
+                await verify(token, config.auth.jwt.secret, { alg: 'HS256' }),
+            );
         } catch {
             return ctx.json({ error: 'Unauthorized' }, 403);
         }
