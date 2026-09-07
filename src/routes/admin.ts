@@ -6,7 +6,7 @@ import AdmZip from 'adm-zip';
 import { stringify as csvStringify } from 'csv-stringify/sync';
 import { and, asc, count, desc, eq, not, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 import StreamZip from 'node-stream-zip';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
@@ -312,7 +312,7 @@ app.get(
         const checkpointZip = new StreamZip.async({
             file: path.join('storage', experiment.checkpointPath),
         });
-        const checkpointMetadata = yaml.load(
+        const checkpointMetadata = load(
             await checkpointZip
                 .entryData('metadata.yaml')
                 .then(r => r.toString('utf-8')),

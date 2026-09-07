@@ -4,7 +4,7 @@ import path from 'node:path';
 import stream from 'node:stream';
 import { Blake3Hasher } from '@napi-rs/blake-hash';
 import { and, eq, type InferSelectModel, not } from 'drizzle-orm';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 import StreamZip from 'node-stream-zip';
 import parseArgsStringToArgv from 'string-argv';
 import wretch from 'wretch';
@@ -142,7 +142,7 @@ try {
     const checkpointZip = new StreamZip.async({
         file: path.join('storage', experiment.checkpointPath),
     });
-    const checkpointMetadata = yaml.load(
+    const checkpointMetadata = load(
         await checkpointZip
             .entryData('metadata.yaml')
             .then(r => r.toString('utf-8')),

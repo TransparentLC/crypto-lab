@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 
 type Config = {
     server: {
@@ -78,5 +78,5 @@ const deepFreeze = <T extends object>(obj: T) => {
 };
 
 export default deepFreeze(
-    yaml.load(fs.readFileSync('config.yaml', { encoding: 'utf-8' })) as Config,
+    load(fs.readFileSync('config.yaml', { encoding: 'utf-8' })) as Config,
 );

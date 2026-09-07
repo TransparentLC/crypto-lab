@@ -14,7 +14,7 @@ import {
     sum,
 } from 'drizzle-orm';
 import { Hono } from 'hono';
-import yaml from 'js-yaml';
+import { load } from 'js-yaml';
 import { z } from 'zod';
 
 import config from '../config';
@@ -73,7 +73,7 @@ app.get('/experiments/:expid{\\d+}', jwtOptional, etag(), async ctx => {
     const checkpointZip = new AdmZip(path.join('storage', row.checkpointPath));
     // @ts-expect-error
     delete row.checkpointPath;
-    const checkpointMetadata = yaml.load(
+    const checkpointMetadata = load(
         await new Promise((resolve, reject) =>
             checkpointZip.readAsTextAsync('metadata.yaml', (data, err) =>
                 err ? reject(err) : resolve(data),
