@@ -55,7 +55,8 @@
                 "rules": {
                     "style": {
                         "useConst": "off",
-                        "useImportType": "off"
+                        "useImportType": "off",
+                        "useVueMultiWordComponentNames": "off"
                     },
                     "correctness": {
                         "noUnusedVariables": "off",

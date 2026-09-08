@@ -1,17 +1,22 @@
-import crypto from 'node:crypto';
-import { and, count, eq, gte, not, sql } from 'drizzle-orm';
+import { and, count, eq, gte, not, or, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { sign, verify } from 'hono/jwt';
 import { streamSSE } from 'hono/streaming';
-import wretch from 'wretch';
 import { z } from 'zod';
-
 import config from '../config';
 import db from '../database';
+import transporter from '../mail-transporter';
 import { etag, jwt, validator } from '../middlewares';
 import { type CongratsEvent, eventEmitter, type JudgeEvent } from '../sandbox';
 import { submissions, users } from '../schema';
-import { passwordGenerate, passwordHash, passwordVerify } from '../util';
+import {
+    deserializeToken,
+    passwordGenerate,
+    passwordHash,
+    passwordVerify,
+    serializeToken,
+    turnstileVerify,
+} from '../util';
 
 const app = new Hono<HonoSchema>();
 
@@ -32,6 +37,9 @@ app.get('/site-config', async ctx =>
         captchaSiteKey: config.auth.captcha.site,
         tokenRefresh: config.auth.jwt.refresh,
         sizeLimit: config.sizeLimit,
+        emailRegistrationDomainWhitelist:
+            config.auth.emailRegistration.domainWhitelist,
+        passwordResetCooldown: config.auth.passwordReset.cooldown,
         theme: config.theme,
         allowLateSubmission: config.allowLateSubmission,
     }),
@@ -50,33 +58,12 @@ app.post(
     async ctx => {
         const body = ctx.req.valid('json');
         try {
-            const captchaValidation = await wretch(
-                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-            )
-                .post(
-                    Object.entries({
-                        secret: config.auth.captcha.secret,
-                        response: body.captcha,
-                        remoteip:
-                            ctx.req.header('X-Real-IP') ??
-                            ctx.req
-                                .header('X-Forwarded-For')
-                                ?.split(',')
-                                .pop()
-                                ?.trim() ??
-                            // biome-ignore lint/style/noNonNullAssertion: 必定存在
-                            ctx.env.incoming.socket.remoteAddress!,
-                    }).reduce((acc, cur) => {
-                        acc.append(cur[0], cur[1]);
-                        return acc;
-                    }, new FormData()),
-                )
-                .json<TurnstileResponse>();
-            if (
-                !captchaValidation.success ||
-                (body.captcha !== 'XXXX.DUMMY.TOKEN.XXXX' &&
-                    captchaValidation.action !== 'crypto-lab-login')
-            )
+            const captchaValidation = await turnstileVerify(
+                ctx,
+                body.captcha,
+                'crypto-lab-login',
+            );
+            if (!captchaValidation.success)
                 return ctx.json(
                     {
                         error: `人机验证失败：${captchaValidation['error-codes'].join(', ')}`,
@@ -120,6 +107,59 @@ app.post(
 );
 
 app.post(
+    '/register',
+    validator(
+        'json',
+        z.object({
+            token: z.string().min(1),
+        }),
+    ),
+    async ctx => {
+        const body = ctx.req.valid('json');
+        let payload: RegisterPayload;
+        try {
+            payload = deserializeToken(
+                body.token,
+                config.auth.emailRegistration.secret,
+            );
+        } catch {
+            return ctx.json({ error: '注册令牌无效' }, 400);
+        }
+        if (Date.now() > payload.exp)
+            return ctx.json({ error: '注册令牌已过期' }, 400);
+        const row = db
+            .select({
+                uid: users.uid,
+            })
+            .from(users)
+            .where(
+                or(
+                    eq(users.username, payload.username),
+                    eq(users.email, payload.email),
+                ),
+            )
+            .get();
+        if (row)
+            return ctx.json({ error: '这个用户名或邮箱已经被注册过了' }, 400);
+        const password = passwordGenerate(16);
+        const uid = db
+            .insert(users)
+            .values({
+                username: payload.username,
+                password: await passwordHash(password),
+                email: payload.email,
+                passwordResetTime: new Date().toISOString(),
+            })
+            .run().lastInsertRowid;
+        return ctx.json({
+            uid,
+            username: payload.username,
+            password,
+        });
+    },
+);
+
+app.post(
     '/change-password',
     jwt,
     validator(
@@ -155,62 +195,15 @@ app.post(
         'json',
         z.object({
             token: z.string().min(1),
-            captcha: z.string().min(1),
         }),
     ),
     async ctx => {
         const body = ctx.req.valid('json');
-        try {
-            const captchaValidation = await wretch(
-                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-            )
-                .post(
-                    Object.entries({
-                        secret: config.auth.captcha.secret,
-                        response: body.captcha,
-                        remoteip:
-                            ctx.req.header('X-Real-IP') ??
-                            ctx.req
-                                .header('X-Forwarded-For')
-                                ?.split(',')
-                                .pop()
-                                ?.trim() ??
-                            // biome-ignore lint/style/noNonNullAssertion: 必定存在
-                            ctx.env.incoming.socket.remoteAddress!,
-                    }).reduce((acc, cur) => {
-                        acc.append(cur[0], cur[1]);
-                        return acc;
-                    }, new FormData()),
-                )
-                .json<TurnstileResponse>();
-            if (
-                !captchaValidation.success ||
-                (body.captcha !== 'XXXX.DUMMY.TOKEN.XXXX' &&
-                    captchaValidation.action !== 'crypto-lab-reset-password')
-            )
-                return ctx.json(
-                    {
-                        error: `人机验证失败：${captchaValidation['error-codes'].join(', ')}`,
-                    },
-                    400,
-                );
-        } catch (err) {
-            console.log(err);
-            return ctx.json({ error: `人机验证服务端验证失败：${err}` }, 500);
-        }
-        const token = Buffer.from(body.token, 'base64url');
-        const iv = token.subarray(0, 16);
         let payload: ResetPasswordPayload;
         try {
-            const decipher = crypto.createDecipheriv(
-                'aes-128-ctr',
-                Buffer.from(config.auth.passwordReset.secret, 'base64url'),
-                iv,
-            );
-            payload = JSON.parse(
-                Buffer.from(decipher.update(token.subarray(16))).toString(
-                    'utf-8',
-                ),
+            payload = deserializeToken(
+                body.token,
+                config.auth.passwordReset.secret,
             );
         } catch {
             return ctx.json({ error: '重设密码令牌无效' }, 400);
@@ -235,6 +228,9 @@ app.post(
         db.update(users)
             .set({
                 password: await passwordHash(password),
+                passwordResetTime: new Date(
+                    Date.now() + config.auth.passwordReset.cooldown * 1e3,
+                ).toISOString(),
             })
             .where(eq(users.uid, payload.uid))
             .run();
@@ -246,13 +242,156 @@ app.post(
     },
 );
 
+app.post(
+    '/register-token',
+    validator(
+        'json',
+        z.object({
+            username: z.string().min(1),
+            email: z.email(),
+            captcha: z.string().min(1),
+        }),
+    ),
+    async ctx => {
+        const body = ctx.req.valid('json');
+        try {
+            const captchaValidation = await turnstileVerify(
+                ctx,
+                body.captcha,
+                'crypto-lab-register-token',
+            );
+            if (!captchaValidation.success)
+                return ctx.json(
+                    {
+                        error: `人机验证失败：${captchaValidation['error-codes'].join(', ')}`,
+                    },
+                    400,
+                );
+        } catch (err) {
+            console.log(err);
+            return ctx.json({ error: `人机验证服务端验证失败：${err}` }, 500);
+        }
+        if (
+            !config.auth.emailRegistration.domainWhitelist.includes(
+                // biome-ignore lint/style/noNonNullAssertion: reason
+                body.email.split('@').pop()!.toLowerCase(),
+            )
+        ) {
+            return ctx.json({ error: '用于注册的邮箱地址不在白名单内' }, 400);
+        }
+        const row = db
+            .select({
+                uid: users.uid,
+            })
+            .from(users)
+            .where(
+                or(
+                    eq(users.username, body.username),
+                    eq(users.email, body.email),
+                ),
+            )
+            .get();
+        if (row)
+            return ctx.json({ error: '这个用户名或邮箱已经被注册过了' }, 400);
+        const expire = Date.now() + config.auth.emailRegistration.expire * 1e3;
+        const token = serializeToken(
+            {
+                username: body.username,
+                email: body.email,
+                exp: expire,
+            } as RegisterPayload,
+            config.auth.emailRegistration.secret,
+        );
+        await transporter.sendMail({
+            from: `Crypto Lab <${config.mail.username}>`,
+            to: body.email,
+            subject: '[现代密码学实验] 注册令牌',
+            html: `<p>你的注册令牌是：</p><pre style="white-space:pre-wrap;word-break:break-all"><code>${token}</code></pre><p>在登录界面选择“注册”，输入令牌即可完成注册。</p><p>令牌可以在 ${new Date(expire).toISOString()} 前使用一次。</p>`,
+        });
+        return ctx.body(null, 204);
+    },
+);
+
+app.post(
+    '/password-reset-token',
+    validator(
+        'json',
+        z.object({
+            username: z.string().min(1),
+            email: z.email(),
+            captcha: z.string().min(1),
+        }),
+    ),
+    async ctx => {
+        const body = ctx.req.valid('json');
+        try {
+            const captchaValidation = await turnstileVerify(
+                ctx,
+                body.captcha,
+                'crypto-lab-password-reset-token',
+            );
+            if (!captchaValidation.success)
+                return ctx.json(
+                    {
+                        error: `人机验证失败：${captchaValidation['error-codes'].join(', ')}`,
+                    },
+                    400,
+                );
+        } catch (err) {
+            console.log(err);
+            return ctx.json({ error: `人机验证服务端验证失败：${err}` }, 500);
+        }
+        const row = db
+            .select({
+                uid: users.uid,
+                password: users.password,
+                passwordResetTime: users.passwordResetTime,
+            })
+            .from(users)
+            .where(
+                and(
+                    eq(users.username, body.username),
+                    eq(users.email, body.email),
+                ),
+            )
+            .get();
+        if (!row) return ctx.json({ error: '用户不存在' }, 400);
+        if (Date.now() < new Date(row.passwordResetTime).getTime()) {
+            return ctx.json(
+                {
+                    error: `重设密码的冷却时间还没有结束，请在 ${new Date(row.passwordResetTime).toISOString()} 后重试`,
+                },
+                400,
+            );
+        }
+        const expire = Date.now() + config.auth.passwordReset.expire * 1e3;
+        const token = serializeToken(
+            {
+                ...row,
+                exp: expire,
+            } as ResetPasswordPayload,
+            config.auth.passwordReset.secret,
+        );
+        await transporter.sendMail({
+            from: `Crypto Lab <${config.mail.username}>`,
+            to: body.email,
+            subject: '[现代密码学实验] 重设密码令牌',
+            html: `<p>你的重设密码令牌是：</p><pre style="white-space:pre-wrap;word-break:break-all"><code>${token}</code></pre><p>在登录界面选择“忘记密码”，输入令牌即可重设密码。</p><p>令牌可以在 ${new Date(expire).toISOString()} 前使用一次，使用后之前生成的令牌将会作废。</p>`,
+        });
+        return ctx.body(null, 204);
+    },
+);
+
 app.get(
     '/notification',
     async (ctx, next) => {
         try {
             const token = ctx.req.query('token');
             if (!token) throw new Error();
-            ctx.set('jwtPayload', await verify(token, config.auth.jwt.secret));
+            ctx.set(
+                'jwtPayload',
+                await verify(token, config.auth.jwt.secret, { alg: 'HS256' }),
+            );
         } catch {
             return streamSSE(ctx, async stream => {
                 await stream.writeSSE({

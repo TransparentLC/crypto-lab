@@ -21,13 +21,25 @@ auth:
     expire: 14400
     # 请求API时如果JWT有效期小于此值则发送新的JWT
     refresh: 7200
+  # 加密邮箱注册相关
+  # 注册token包含用户名、邮箱和有效期
+  # 用AES-128 GCM加密，无AAD，格式为IV+密文+Tag
+  emailRegistration:
+    # crypto.randomBytes(16).toString('base64url')
+    secret: xxxxxxxxxxxxxxxxxxxxxx
+    expire: 600
+    # 允许注册的邮箱域名列表，统一使用小写
+    domainWhitelist:
+      - example.com
   # 加密重置密码相关
   # 重置token包含用户信息、有效期和已有的密码hash（保证一个token只能重置一次）
-  # 用AES-128 CTR加密
+  # 用AES-128 GCM加密，无AAD，格式为IV+密文+Tag
   passwordReset:
-    # crypto.getRandomValues(Buffer.allocUnsafe(16)).toString('base64url')
+    # crypto.randomBytes(16).toString('base64url')
     secret: xxxxxxxxxxxxxxxxxxxxxx
-    expire: 14400
+    expire: 3600
+    # 成功重置密码后的冷却时间
+    cooldown: 604800
   # 管理员密码，用户名固定为admin
   # pnpm exec tsx scripts/admin-password.ts password
   # Password for "admin"
@@ -57,13 +69,13 @@ sandbox:
 theme:
   # Naive UI的主题色
   color:
-    primary: '#f69'
-    hover: '#f8a'
-    pressed: '#f37'
-    suppl: '#f8a'
+    primary: "#f69"
+    hover: "#f8a"
+    pressed: "#f37"
+    suppl: "#f8a"
   # 左上角的LOGO
   logo: logo/origin.svg
-# 邮件（目前仅用于发送重设密码令牌）
+# 邮件（用于注册和重设密码）
 mail:
   host: smtp.example.com
   username: noreply@example.com

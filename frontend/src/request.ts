@@ -83,6 +83,11 @@ export type ApiLogin = {
     token: string;
 };
 
+export type ApiRegister = {
+    uid: number;
+    username: string;
+    password: string;
+};
 export type ApiResetPassword = {
     uid: number;
     username: string;
@@ -114,6 +119,7 @@ export type ApiAdminUsers = {
     rows: {
         uid: number;
         username: string;
+        email: string;
         enabled: boolean;
     }[];
 };

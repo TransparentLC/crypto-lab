@@ -17,6 +17,8 @@ const store = reactive({
             code: 0,
             report: 0,
         },
+        emailRegistrationDomainWhitelist: [] as string[],
+        passwordResetCooldown: 0,
         theme: {
             color: {
                 primary: '',

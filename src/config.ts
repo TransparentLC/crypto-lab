@@ -22,11 +22,17 @@ type Config = {
             expire: number;
             refresh: number;
         };
-        admin: string;
+        emailRegistration: {
+            secret: string;
+            expire: number;
+            domainWhitelist: string[];
+        };
         passwordReset: {
             secret: string;
             expire: number;
+            cooldown: number;
         };
+        admin: string;
     };
     sizeLimit: {
         compileOutput: number;

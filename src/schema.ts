@@ -4,7 +4,10 @@ export const users = sqliteTable('users', {
     uid: integer('uid').primaryKey({ autoIncrement: true }),
     username: text('username').notNull().unique(),
     password: text('password').notNull(),
+    email: text('email').notNull().unique(),
     enabled: integer('enabled', { mode: 'boolean' }).default(true).notNull(),
+    // ISO 8601
+    passwordResetTime: text('password_reset_time').notNull(),
 });
 
 export const experiments = sqliteTable('experiments', {
@@ -83,9 +86,7 @@ export const reports = sqliteTable(
             .references(() => experiments.expid),
         reportPath: text('report_path').notNull(),
     },
-    row => ({
-        unq: unique().on(row.uid, row.expid),
-    }),
+    row => [unique().on(row.uid, row.expid)],
 );
 
 export const submissions = sqliteTable('submissions', {

@@ -3,7 +3,7 @@
     <n-space vertical>
         <n-table style="width:100%">
             <n-thead>
-                <n-tr><n-th>用户 ID</n-th><n-th>用户名</n-th><n-th>已启用</n-th></n-tr>
+                <n-tr><n-th>用户 ID</n-th><n-th>用户名</n-th><n-th>邮箱</n-th><n-th>已启用</n-th></n-tr>
             </n-thead>
             <n-tbody>
                 <n-tr v-for="e in userData" :key="e.uid">
@@ -26,6 +26,19 @@
                                     </n-button>
                                 </template>
                                 重设密码
+                            </n-tooltip>
+                        </span>
+                    </n-td>
+                    <n-td>
+                        <span style="display:flex;align-items:center">
+                            {{ e.email }}
+                            <n-tooltip trigger="hover">
+                                <template #trigger>
+                                    <n-button @click="() => changeEmail(e)" text style="font-size:var(--n-icon-size);margin-left:var(--n-icon-margin)">
+                                        <n-mdi :icon="mdiEmailEditOutline"></n-mdi>
+                                    </n-button>
+                                </template>
+                                修改邮箱
                             </n-tooltip>
                         </span>
                     </n-td>
@@ -57,15 +70,28 @@
                 trigger: 'blur',
                 message: '请输入用户名',
             },
+            email: {
+                required: true,
+                trigger: 'blur',
+                message: '请输入邮箱',
+                type: 'email',
+            },
         }"
         label-placement="top"
         label-width="auto"
         :show-require-mark="false"
         style="max-width:480px"
     >
-        <n-form-item label="用户名" path="oldPassword">
+        <n-form-item label="用户名" path="username">
             <n-input
                 v-model:value="formCreateUser.username"
+                placeholder=""
+                @keydown.enter="createUser"
+            ></n-input>
+        </n-form-item>
+        <n-form-item label="邮箱" path="email">
+            <n-input
+                v-model:value="formCreateUser.email"
                 placeholder=""
                 @keydown.enter="createUser"
             ></n-input>
@@ -284,6 +310,7 @@
 import {
     mdiClose,
     mdiDownload,
+    mdiEmailEditOutline,
     mdiFileUploadOutline,
     mdiLockReset,
     mdiTagEditOutline,
@@ -401,6 +428,35 @@ const changeUsername = (user: ApiAdminUsers['rows'][number]) => {
         },
     });
 };
+const changeEmail = (user: ApiAdminUsers['rows'][number]) => {
+    let value = user.email;
+    const d = window.chiya.dialog.create({
+        title: `修改邮箱 #${user.uid}`,
+        content: () =>
+            h(NInput, {
+                placeholder: '',
+                defaultValue: value,
+                'onUpdate:value': (e: string) => {
+                    value = e;
+                },
+            }),
+        positiveText: '确定',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+            if (!value) return;
+            d.loading = true;
+            return http
+                .patch({ email: value }, `/admin/users/${user.uid}`)
+                .res()
+                .then(() => {
+                    window.chiya.message.success(
+                        `已将 #${user.uid} 的邮箱修改为“${value}”`,
+                    );
+                    updateUserData(userPageCount.value);
+                });
+        },
+    });
+};
 const changeUserEnabled = (
     user: ApiAdminUsers['rows'][number],
     enabled: boolean,
@@ -416,6 +472,7 @@ const changeUserEnabled = (
 
 const formCreateUser = reactive({
     username: '',
+    email: '',
 });
 const createUserLoading = ref(false);
 const createUser = async () => {
@@ -423,7 +480,13 @@ const createUser = async () => {
         const username = formCreateUser.username;
         createUserLoading.value = true;
         const r = await http
-            .post({ username: formCreateUser.username }, '/admin/users')
+            .post(
+                {
+                    username: formCreateUser.username,
+                    email: formCreateUser.email,
+                },
+                '/admin/users',
+            )
             .json<ApiAdminUserCreate>();
         window.chiya.dialog.create({
             title: '添加用户',

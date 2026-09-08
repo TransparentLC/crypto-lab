@@ -8,25 +8,14 @@ import { and, asc, count, desc, eq, not, sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { load } from 'js-yaml';
 import StreamZip from 'node-stream-zip';
-import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import config from '../config';
 import db from '../database';
+import transporter from '../mail-transporter';
 import { ensureAdmin, etag, jwt, jwtQuery, validator } from '../middlewares';
 import { judgeRightNow } from '../sandbox';
 import { experiments, reports, submissions, users } from '../schema';
-import { passwordGenerate, passwordHash } from '../util';
-
-const transporter = nodemailer.createTransport({
-    host: config.mail.host,
-    port: 465,
-    secure: true,
-    pool: true,
-    auth: {
-        user: config.mail.username,
-        pass: config.mail.password,
-    },
-});
+import { passwordGenerate, passwordHash, serializeToken } from '../util';
 
 const app = new Hono<HonoSchema>();
 
@@ -51,6 +40,7 @@ app.get(
             .select({
                 uid: users.uid,
                 username: users.username,
+                email: users.email,
                 enabled: users.enabled,
             })
             .from(users)
@@ -73,6 +63,7 @@ app.post(
         'json',
         z.object({
             username: z.string().min(1),
+            email: z.email(),
         }),
     ),
     async ctx => {
@@ -82,6 +73,8 @@ app.post(
             .values({
                 username: body.username,
                 password: await passwordHash(password),
+                email: body.email,
+                passwordResetTime: new Date().toISOString(),
             })
             .run();
         return ctx.json({ password });
@@ -96,6 +89,7 @@ app.patch(
         'json',
         z.object({
             username: z.string().min(1).optional(),
+            email: z.email().optional(),
             enabled: z.boolean().optional(),
         }),
     ),
@@ -132,22 +126,13 @@ app.post(
             .where(eq(users.uid, Number(ctx.req.param('uid'))))
             .get();
         if (!row) return ctx.json({ error: '用户不存在' }, 400);
-        const iv = crypto.getRandomValues(Buffer.allocUnsafe(16));
         const expire = Date.now() + config.auth.passwordReset.expire * 1e3;
-        const cipher = crypto.createCipheriv(
-            'aes-128-ctr',
-            Buffer.from(config.auth.passwordReset.secret, 'base64url'),
-            iv,
-        );
-        const payload = Buffer.from(
-            JSON.stringify({
+        const token = serializeToken(
+            {
                 ...row,
                 exp: expire,
-            } as ResetPasswordPayload),
-            'utf-8',
-        );
-        const token = Buffer.concat([iv, cipher.update(payload)]).toString(
-            'base64url',
+            } as ResetPasswordPayload,
+            config.auth.passwordReset.secret,
         );
         if (body?.email) {
             await transporter.sendMail({
