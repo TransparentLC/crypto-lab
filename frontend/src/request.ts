@@ -101,6 +101,8 @@ export type ApiSiteConfig = {
         code: number;
         report: number;
     };
+    emailRegistrationDomainWhitelist: string[];
+    passwordResetCooldown: number;
     theme: {
         color: {
             primary: string;
