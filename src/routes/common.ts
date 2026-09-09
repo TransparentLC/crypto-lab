@@ -127,6 +127,8 @@ app.post(
         }
         if (Date.now() > payload.exp)
             return ctx.json({ error: '注册令牌已过期' }, 400);
+        if (payload.username === 'admin')
+            return ctx.json({ error: '“admin”是管理员用户名，不能注册' }, 400);
         const row = db
             .select({
                 uid: users.uid,
